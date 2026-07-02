@@ -23,8 +23,7 @@ const DAY_LENGTH_S = 600;
 const WATER = 8;
 const TNT = 9;
 
-// seconds of mining per block type (hold left mouse); TNT ignites instead
-const HARDNESS = [0.3, 0.35, 0.85, 0.28, 0.55, 0.12, 0.18, 0.85, Infinity, Infinity];
+// per-block mining time (seconds of hold-to-mine) lives in BLOCKS[].hardness
 
 // ---- renderer / scene ------------------------------------------------------
 
@@ -47,6 +46,9 @@ scene.add(ambient);
 const sun = new THREE.DirectionalLight(0xfff2cc, 1.1);
 sun.position.set(60, 100, 40);
 scene.add(sun);
+// miner's headlamp: makes unlit caves explorable without a lighting engine
+const lamp = new THREE.PointLight(0xffe8b8, 0, 9, 1.6);
+camera.add(lamp);
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -210,6 +212,7 @@ relay.onHello = ({ id, name }) => { myId = id; ui.addChat('system', `connected a
 relay.onHost = (id) => { if (id === myId) mobs.becomeHost(); };
 relay.onMobs = (list) => mobs.applyState(list);
 relay.onMobHit = ({ id, ix, iz }) => { if (mobs.isHost) mobs.applyHit(id, ix, iz); };
+mobs.onPoof = (x, y, z) => { particles.burst(x - 0.5, y - 0.5, z - 0.5, 1, 14); };
 relay.onChat = ({ id, name, text }) => ui.addChat(name, text, id === myId);
 ui.onChatSend = (text) => { relay.send({ type: 'chat', text }); canvas.requestPointerLock(); };
 mobs.sendState = (list) => relay.send({ type: 'mobs', list });
@@ -477,7 +480,7 @@ function updateMining(dt) {
     mining.lastStage = -1;
   }
   mining.progress += dt;
-  const required = HARDNESS[hit.blockId] ?? 0.4;
+  const required = BLOCKS[hit.blockId]?.hardness ?? 0.4;
   const k = Math.min(1, mining.progress / required);
   crack.show(hit.x, hit.y, hit.z, k);
   const stage = Math.floor(k * 4);
@@ -529,6 +532,33 @@ function updateDayNight(dt, elapsed) {
 // ambient birds during the day
 let chirpT = 8;
 
+// zombies bite the local player on contact (1s cooldown), groan when close
+let biteCooldown = 0;
+let groanT = 4;
+function updateZombieAttacks(dt) {
+  biteCooldown = Math.max(0, biteCooldown - dt);
+  groanT -= dt;
+  if (dead) return;
+  const touching = mobs.hostileTouching(player.position);
+  if (touching.length && biteCooldown === 0) {
+    biteCooldown = 1;
+    damage(3, { shake: 0.3 });
+    // shove the player away from the biter
+    const z = mobs.mobs.get(touching[0]);
+    if (z) {
+      const away = player.position.clone().sub(z.group.position).setY(0).normalize();
+      player.velocity.addScaledVector(away, 6);
+      player.velocity.y += 3.5;
+    }
+  }
+  if (groanT <= 0) {
+    groanT = 3 + Math.random() * 5;
+    const nearZombie = [...mobs.mobs.values()].some((m) =>
+      m.type === 'zombie' && m.group.position.distanceTo(player.position) < 10);
+    if (nearZombie) sounds.groan();
+  }
+}
+
 // ---- boot -----------------------------------------------------------------------------
 
 world.buildAllChunks();
@@ -564,7 +594,10 @@ function step(dt, now = performance.now()) {
   particles.update(dt);
   drops.update(dt, player.position);
   remotePlayers.update(dt);
-  mobs.update(dt);
+  // host simulates mobs against every player position (self + remote)
+  const playerSpots = [{ x: player.position.x, z: player.position.z }, ...remotePlayers.positions()];
+  mobs.update(dt, lastDaylight, playerSpots);
+  updateZombieAttacks(dt);
   updateDayNight(dt, (now - start) / 1000);
 
   // ambient chirps in daylight
@@ -581,6 +614,12 @@ function step(dt, now = performance.now()) {
   hand.rotation.x = 0.25 - swingK * 0.9;
   hand.position.y = -0.42 - swingK * 0.1 + Math.sin(player.bobPhase * 2) * 0.02 * player.bobAmount;
   hand.position.z = -0.85 - swingK * 0.12;
+
+  // headlamp: bright underground, soft at night, off in daylight
+  const underground = player.position.y + 1.6 <
+    world.surfaceHeight(Math.floor(player.position.x), Math.floor(player.position.z)) - 0.5;
+  const lampTarget = underground ? 1.6 : lastDaylight < 0.25 ? 0.55 : 0;
+  lamp.intensity += (lampTarget - lamp.intensity) * Math.min(1, dt * 4);
 
   // sprint / fly FOV kick
   const targetFov = player.flying ? 80 : player.sprinting ? 83 : 75;

@@ -147,7 +147,7 @@ wss.on('connection', (ws) => {
       case 'blockEvent': {
         const { x, y, z, blockTypeId, action } = msg;
         if (![x, y, z, blockTypeId, action].every(Number.isInteger)) return;
-        if (blockTypeId < 0 || blockTypeId > 9 || (action !== 0 && action !== 1)) return; // 9 = TNT
+        if (blockTypeId < 0 || blockTypeId > 13 || (action !== 0 && action !== 1)) return; // 9=TNT 10-13=ores
 
         // 1. apply + real-time sync to all other clients immediately
         world.apply({ x, y, z, blockTypeId, action });

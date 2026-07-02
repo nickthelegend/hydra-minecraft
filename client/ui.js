@@ -43,7 +43,7 @@ export class UI {
         : '#' + block.color.toString(16).padStart(6, '0');
       if (block.transparent) swatch.style.opacity = String(0.45 + (block.opacity ?? 1) * 0.5);
       const label = document.createElement('span');
-      label.textContent = String((i + 1) % 10); // slot 10 = key 0
+      label.textContent = i < 10 ? String((i + 1) % 10) : ''; // keys 1-9,0; ores via scroll/pick
       const name = document.createElement('em');
       name.textContent = block.name;
       const count = document.createElement('i');
@@ -241,7 +241,7 @@ export class UI {
       `${fps.toFixed(0)} fps · ${mode} · ${this.mode} [G]`,
       `xyz: ${position.x.toFixed(1)} / ${position.y.toFixed(1)} / ${position.z.toFixed(1)}`,
       `looking at: ${targetBlock ? `${BLOCKS[targetBlock.blockId].name} (${targetBlock.x},${targetBlock.y},${targetBlock.z})` : '-'}`,
-      `server: ${online ? 'online' : 'offline'} · players: ${others} · sheep: ${mobs}`,
+      `server: ${online ? 'online' : 'offline'} · players: ${others} · mobs: ${mobs}`,
     ].join('<br>');
   }
 }

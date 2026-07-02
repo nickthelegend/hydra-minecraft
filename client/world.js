@@ -3,18 +3,23 @@
 
 import * as THREE from 'three';
 
+// hardness = seconds of hold-to-mine (Minecraft-with-a-decent-tool feel)
 export const BLOCKS = [
-  { id: 0, name: 'Grass', color: 0x59a832, transparent: false, solid: true },
-  { id: 1, name: 'Dirt', color: 0x7a5230, transparent: false, solid: true },
-  { id: 2, name: 'Stone', color: 0x8a8a8a, transparent: false, solid: true },
-  { id: 3, name: 'Sand', color: 0xd9cd8e, transparent: false, solid: true, falls: true },
-  { id: 4, name: 'Wood', color: 0x6b4a2b, transparent: false, solid: true },
-  { id: 5, name: 'Leaves', color: 0x2e7d32, transparent: true, opacity: 0.9, solid: true },
-  { id: 6, name: 'Glass', color: 0xbfe3f2, transparent: true, opacity: 0.35, solid: true },
-  { id: 7, name: 'Brick', color: 0xa5442a, transparent: false, solid: true },
-  { id: 8, name: 'Water', color: 0x2864c8, transparent: true, opacity: 0.55, solid: false },
-  // v3 extension to the original 0-8 datum spec: 9 = TNT (punch to ignite)
-  { id: 9, name: 'TNT', color: 0xd94534, transparent: false, solid: true, tnt: true },
+  { id: 0, name: 'Grass', color: 0x59a832, transparent: false, solid: true, hardness: 0.6 },
+  { id: 1, name: 'Dirt', color: 0x7a5230, transparent: false, solid: true, hardness: 0.5 },
+  { id: 2, name: 'Stone', color: 0x8a8a8a, transparent: false, solid: true, hardness: 1.5 },
+  { id: 3, name: 'Sand', color: 0xd9cd8e, transparent: false, solid: true, falls: true, hardness: 0.5 },
+  { id: 4, name: 'Wood', color: 0x6b4a2b, transparent: false, solid: true, hardness: 2.0 },
+  { id: 5, name: 'Leaves', color: 0x2e7d32, transparent: true, opacity: 0.9, solid: true, hardness: 0.2 },
+  { id: 6, name: 'Glass', color: 0xbfe3f2, transparent: true, opacity: 0.35, solid: true, hardness: 0.3 },
+  { id: 7, name: 'Brick', color: 0xa5442a, transparent: false, solid: true, hardness: 2.0 },
+  { id: 8, name: 'Water', color: 0x2864c8, transparent: true, opacity: 0.55, solid: false, hardness: Infinity },
+  // v3+ extensions to the original 0-8 datum spec:
+  { id: 9, name: 'TNT', color: 0xd94534, transparent: false, solid: true, tnt: true, hardness: Infinity },
+  { id: 10, name: 'Coal Ore', color: 0x6e6e6e, transparent: false, solid: true, ore: 0x26262a, hardness: 2.0 },
+  { id: 11, name: 'Iron Ore', color: 0x8d8781, transparent: false, solid: true, ore: 0xd8af93, hardness: 2.5 },
+  { id: 12, name: 'Gold Ore', color: 0x8d8781, transparent: false, solid: true, ore: 0xf5d539, hardness: 3.0 },
+  { id: 13, name: 'Diamond Ore', color: 0x8d8781, transparent: false, solid: true, ore: 0x63e8e0, hardness: 3.0 },
 ];
 
 export const AIR = -1;
@@ -103,6 +108,51 @@ function hash2(x, z, seed) {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
+function hash3(x, y, z, seed) {
+  let h = Math.imul(x, 374761393) + Math.imul(y, 2246822519) + Math.imul(z, 668265263) + seed;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+// trilinear 3D value noise built on hash3 — used to carve caves
+function vnoise3(x, y, z, seed) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+  const xf = x - xi, yf = y - yi, zf = z - zi;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  let v = 0;
+  const c = [];
+  for (let dz = 0; dz <= 1; dz++) {
+    for (let dy = 0; dy <= 1; dy++) {
+      for (let dx = 0; dx <= 1; dx++) {
+        c.push(hash3(xi + dx, yi + dy, zi + dz, seed));
+      }
+    }
+  }
+  const x1 = lerp(c[0], c[1], xf), x2 = lerp(c[2], c[3], xf);
+  const x3 = lerp(c[4], c[5], xf), x4 = lerp(c[6], c[7], xf);
+  const y1 = lerp(x1, x2, yf), y2 = lerp(x3, x4, yf);
+  return lerp(y1, y2, zf);
+}
+
+// stone base with colored ore speckles
+function oreTexture(baseColor, oreColor) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#' + baseColor.toString(16).padStart(6, '0');
+  ctx.fillRect(0, 0, 64, 64);
+  const rand = (() => { let s = oreColor & 0xffff; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })();
+  ctx.fillStyle = '#' + oreColor.toString(16).padStart(6, '0');
+  for (let i = 0; i < 9; i++) {
+    const x = 4 + rand() * 52, y = 4 + rand() * 52, r = 3 + rand() * 4;
+    ctx.fillRect(x, y, r, r);
+    ctx.fillRect(x + r * 0.4, y - r * 0.5, r * 0.7, r * 0.7);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.magFilter = THREE.NearestFilter;
+  return tex;
+}
+
 // classic red block with lighter bands and "TNT" lettering
 function tntTexture() {
   const c = document.createElement('canvas');
@@ -135,6 +185,9 @@ export class World {
     this.materials = BLOCKS.map((b) => {
       if (b.tnt) {
         return new THREE.MeshLambertMaterial({ map: tntTexture(), color: 0xffffff });
+      }
+      if (b.ore) {
+        return new THREE.MeshLambertMaterial({ map: oreTexture(b.color, b.ore), color: 0xffffff });
       }
       return new THREE.MeshLambertMaterial({
         color: b.color,
@@ -175,16 +228,39 @@ export class World {
 
   // ---- terrain generation --------------------------------------------------
 
+  // ore veins: coarse 2x2x2 cluster hash so ores appear in small veins,
+  // rarer + more precious with depth (coal < iron < gold < diamond)
+  oreAt(x, y, z) {
+    const cx = x >> 1, cy = y >> 1, cz = z >> 1;
+    if (y < 9 && hash3(cx, cy, cz, WORLD_SEED + 44) < 0.013) return 13; // diamond
+    if (y < 14 && hash3(cx, cy, cz, WORLD_SEED + 33) < 0.016) return 12; // gold
+    if (y < 22 && hash3(cx, cy, cz, WORLD_SEED + 22) < 0.024) return 11; // iron
+    if (y < 30 && hash3(cx, cy, cz, WORLD_SEED + 11) < 0.032) return 10; // coal
+    return 2; // plain stone
+  }
+
+  // worm-like cave carving via two 3D value-noise fields
+  isCave(x, y, z) {
+    const n1 = vnoise3(x / 13, y / 9, z / 13, WORLD_SEED + 7);
+    if (Math.abs(n1 - 0.5) > 0.062) return false;
+    const n2 = vnoise3(x / 21 + 90, y / 15, z / 21, WORLD_SEED + 77);
+    return Math.abs(n2 - 0.5) < 0.18;
+  }
+
   generate() {
     const perlin = new Perlin(WORLD_SEED);
     for (let x = this.bounds.minX; x <= this.bounds.maxX; x++) {
       for (let z = this.bounds.minZ; z <= this.bounds.maxZ; z++) {
         const n = perlin.octaves(x, z, 4, 0.5, 1 / 48);
         const height = Math.max(2, Math.floor(26 + n * 14));
+        // caves only under dry land so they never breach the sea floor
+        const canCarve = height > SEA_LEVEL + 1;
         for (let y = 0; y < WORLD_HEIGHT; y++) {
           let id = AIR;
-          if (y < height - 4) id = 2; // stone
-          else if (y < height) id = 1; // dirt
+          if (y < height - 4) {
+            if (canCarve && y >= 3 && this.isCave(x, y, z)) continue; // cave air
+            id = this.oreAt(x, y, z);
+          } else if (y < height) id = 1; // dirt
           else if (y === height) {
             id = height <= SEA_LEVEL + 1 ? 3 : 0; // sand near water, else grass
           } else if (y <= SEA_LEVEL) {

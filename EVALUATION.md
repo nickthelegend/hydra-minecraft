@@ -112,6 +112,27 @@ explosion on-chain (records 74 → 111); sheep wander + knockback; chat
 round-trip; third-person camera pullback 4.0 with self-avatar. v3 totals:
 **3,779 lines** across 22 files.
 
+## v4 update: mobs + underground ("all real minecraft", /goal request)
+
+- **Zombies**: spawn after dark (≤6, min 14 blocks from players), chase any
+  player within 24 blocks at 2.3 blocks/s, bite for 3 damage + knockback on a
+  1 s cooldown, groan when near, die to 5 punches (poof), burn off at dawn.
+  Verified: chase closed 10.0 → 0.9 blocks; two bites in 1.65 s → 6 damage.
+- **Passive mob variety**: 3 sheep, 2 pigs, 2 cows, 1 chicken with distinct
+  blocky models and per-species health (chicken 2 … cow 4); punchable with
+  knockback; host-simulated, state-synced, dead/despawned mobs removed on all
+  clients.
+- **Caves**: 3D-value-noise worm tunnels under all dry land (~11k air cells
+  in a quarter-sample of the map) with an automatic miner's headlamp
+  (bright underground, soft at night, off in daylight).
+- **Ores**: coal/iron/gold/diamond (ids 10-13) in coarse-hash veins, rarity
+  and depth ordered — sampled 1437/1065/458/207 — speckle-textured, minable
+  and collectable in survival (verified diamond: mine → drop → magnet pickup
+  → hotbar count).
+- **Real per-block mining times** from `BLOCKS[].hardness` — measured exact:
+  dirt 0.51 s (spec 0.5), stone 1.50 s (1.5), diamond ore 3.01 s (3.0).
+- 14-slot hotbar (ores selectable via scroll/click/middle-click pick).
+
 ## End-to-end verification summary (all passed)
 
 1. Offline head opens; seeded UTxO visible via `GET /snapshot/utxo`.

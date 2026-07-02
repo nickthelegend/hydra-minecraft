@@ -57,8 +57,24 @@ World physics that ends up on-chain: **TNT explosions** break every block in
 the blast radius as individual Hydra transactions (a single explosion is a
 ~30-80 tx burst — a nice L2 throughput demo), chain-react with nearby TNT and
 trigger **falling sand**, which is re-recorded as break-at-top + place-at-
-bottom by the client that caused it. Ambient life (sheep, item drops, clouds)
+bottom by the client that caused it. Ambient life (mobs, item drops, clouds)
 is deliberately *not* recorded — only world edits are.
+
+### Underground & mobs (v4)
+
+- **Caves**: worm-like tunnel systems carved by 3D value noise under all dry
+  land — bring the auto-headlamp (it brightens underground and at night).
+- **Ores** (block ids 10-13): coal, iron, gold and diamond veins, rarer and
+  deeper in that order, with speckled textures; mine them in survival to
+  collect (they're placeable like any block).
+- **Real per-block mining times** (`BLOCKS[].hardness`): dirt/sand 0.5 s,
+  grass 0.6 s, leaves 0.2 s, glass 0.3 s, stone 1.5 s, wood/brick/coal 2 s,
+  iron 2.5 s, gold/diamond 3 s.
+- **Mobs**: sheep, pigs, cows and chickens wander by day (8 total, each with
+  hearts of their own — punch a chicken twice and it poofs). **Zombies spawn
+  after dark** (up to 6), hunt any player within 24 blocks, bite for 3 damage
+  with knockback, burn off at dawn, and die to 5 punches. All simulated by
+  the relay-elected host client and synced to everyone.
 
 ### Verifying it's real (not mocked)
 
@@ -85,9 +101,10 @@ is deliberately *not* recorded — only world edits are.
   - a fuel **change output**, spent by the next action (optimistic tx chaining).
 - Datum shape: `Constr 0 [Integer x, Integer y, Integer z, Integer blockTypeId, Integer action, Integer seq]`
   with `action` 0=place / 1=break, `blockTypeId` 0=grass 1=dirt 2=stone 3=sand 4=wood
-  5=leaves 6=glass 7=brick 8=water 9=TNT. The 6th field (`seq`) extends the base
-  5-field spec so the unordered UTxO set can be replayed deterministically
-  (blockTypeId 9 is also an extension of the original 0-8 table).
+  5=leaves 6=glass 7=brick 8=water 9=TNT 10=coal-ore 11=iron-ore 12=gold-ore
+  13=diamond-ore. The 6th field (`seq`) extends the base 5-field spec so the
+  unordered UTxO set can be replayed deterministically (ids 9-13 also extend
+  the original 0-8 table).
 - On `SnapshotConfirmed`, the relay decodes the confirmed transactions' datums and
   broadcasts world deltas to all clients; live edits are also broadcast immediately so
   multiplayer stays snappy (and keeps working if Hydra is down).
