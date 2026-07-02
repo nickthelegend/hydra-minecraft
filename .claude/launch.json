@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "relay",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PORT=3100", "node", "server/index.js"],
+      "port": 3100
+    }
+  ]
+}

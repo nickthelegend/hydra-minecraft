@@ -1,0 +1,21 @@
+{
+  "name": "hydra-minecraft",
+  "version": "1.0.0",
+  "description": "Browser voxel game (Three.js) with every block action recorded on Cardano Hydra L2",
+  "type": "module",
+  "scripts": {
+    "setup": "node server/setup.js",
+    "start": "node server/setup.js && node server/index.js",
+    "hydra:up": "docker compose -f docker/docker-compose.yml up -d",
+    "hydra:down": "docker compose -f docker/docker-compose.yml down",
+    "hydra:logs": "docker compose -f docker/docker-compose.yml logs -f"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@emurgo/cardano-serialization-lib-nodejs": "^12.1.1",
+    "express": "^4.19.2",
+    "ws": "^8.18.0"
+  }
+}

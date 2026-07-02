@@ -1,0 +1,39 @@
+services:
+  hydra-node:
+    # Note for Apple Silicon: the GHCR image is amd64-only and its embedded
+    # etcd crashes under emulation — set HYDRA_IMAGE to a native arm64 build
+    # (see docker/.env and README).
+    image: ${HYDRA_IMAGE:-ghcr.io/cardano-scaling/hydra-node:latest}
+    restart: unless-stopped
+    command:
+      - --node-id
+      - hydra-minecraft
+      # offline mode: no cardano-node needed, head opens instantly with the
+      # UTxO below already committed
+      - --offline-head-seed
+      - "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      - --initial-utxo
+      - /credentials/utxo.json
+      - --hydra-signing-key
+      - /credentials/hydra.sk
+      - --ledger-protocol-parameters
+      - /config/protocol-parameters.json
+      - --api-host
+      - 0.0.0.0
+      - --api-port
+      - "4001"
+      - --persistence-dir
+      - /data
+    volumes:
+      - ./credentials:/credentials:ro
+      - ../protocol-parameters.json:/config/protocol-parameters.json:ro
+      - hydra-data:/data
+    ports:
+      # hydra-node serves WebSocket and HTTP on the same API port (4001 in
+      # the container). Host ports are 14001/14002 to avoid clashing with any
+      # other local Hydra setup; override HYDRA_PORT for the relay if changed.
+      - "${HYDRA_WS_PORT:-14001}:4001" # WebSocket + HTTP API
+      - "${HYDRA_HTTP_PORT:-14002}:4001" # HTTP alias
+
+volumes:
+  hydra-data:

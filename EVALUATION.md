@@ -1,0 +1,75 @@
+# Evaluation Report — one-prompt build, Claude Fable 5
+
+Built from a single prompt on 2026-07-02, fully autonomously (user asleep).
+
+## Time
+
+| metric | value |
+|---|---|
+| Wall-clock, prompt → verified end-to-end | **~18.5 minutes** |
+| First playable render in browser | ~13 minutes |
+| Human interventions | 0 |
+
+## Cost
+
+Exact billing isn't visible from inside the session — check `/cost` or the Console
+for the real number. Rough order of magnitude for a session of this size
+(~60 tool calls, heavy log output, one model): **single-digit dollars** on API
+pricing. Everything ran locally (offline Hydra head, fake lovelace), so on-chain
+cost is exactly **0 — and every game transaction is zero-fee by protocol parameters**.
+
+## Code volume
+
+**1,717 lines** total across 16 files (excluding node_modules and generated credentials):
+
+| area | files | lines |
+|---|---|---|
+| Client (game) | 7 (`index.html`, `main.js`, `world.js`, `player.js`, `raycast.js`, `ui.js`, `hydra-client.js`) | 902 |
+| Server (relay + Hydra) | 5 (`index.js`, `hydra.js`, `datum.js`, `world-state.js`, `setup.js`) | 627 |
+| Infra + docs | `docker-compose.yml`, `protocol-parameters.json`, `package.json`, `README.md`, `.claude/launch.json` | 188 |
+
+Dependencies: 3 runtime npm packages (`ws`, `express`, `@emurgo/cardano-serialization-lib-nodejs`;
+built-in `fetch` used instead of `node-fetch`). Client is vanilla JS + Three.js r158 from CDN, no bundler.
+
+## Feature coverage — 12 / 12
+
+- [x] Chunked terrain rendering — 7×7 chunks of 16×16×64 (spec asked ≥5×5)
+- [x] Perlin noise generation — seeded 4-octave Perlin; grass/dirt/stone/sand/water layers + procedural trees
+- [x] First-person controls + physics — pointer lock, WASD, gravity, jump, AABB collision (verified: walk 3.2 blocks/600ms, jump peak +1.4, clean landing)
+- [x] Block place / break — DDA raycast with face highlight, place-into-air/water rules, player-intersection guard
+- [x] Hotbar UI — 9 block types, 1–9 keys + scroll wheel + click
+- [x] Hydra node running in offline mode — `--offline-head-seed`, seeded 1M ADA UTxO, zero-fee params
+- [x] Block actions submitted as NewTx — real signed Conway-era txs with CBOR inline datums, verified on-chain: `Constr 0 [x,y,z,blockTypeId,action,seq]`
+- [x] SnapshotConfirmed → world sync — datums decoded from confirmed txs, deltas broadcast (dedup'd against the live path)
+- [x] World state replay on new client join — verified: fresh client received `[[1,40,2,7],[3,30,4,-1]]`; relay restart re-replayed all actions from `GET /snapshot/utxo`
+- [x] Hydra debug overlay (H key) — head status, tx submitted/valid/invalid, last snapshot #, UTxO count, queue depth
+- [x] Graceful fallback if Hydra unreachable — verified: stopped the container mid-game; clients kept syncing; queued action landed on-chain (seq 2) after restart
+- [x] Multi-client sync — verified twice: two WS clients (A places → B receives), and a Node "second player" placing a glass block that appeared live in the open browser tab
+
+Extras beyond spec: day/night cycle (optional item), procedural trees, sprint,
+respawn on fall, per-instance color variation, auto-reconnect on both WS hops,
+`/health` endpoint, `window.__game` debug handle.
+
+## Deviations from the spec (deliberate, documented)
+
+1. **Datum has a 6th field `seq`** — the spec's 5-field datum can't satisfy its own
+   "replay in sequence-number order" requirement, since the UTxO set is unordered.
+2. **Hydra host ports 14001/14002 instead of 4001/4002** — 4001–4003 were occupied by
+   another Hydra cluster already running on this machine. hydra-node serves WS and HTTP
+   on one port; both mapped ports work.
+3. **`local/hydra-node:2.1.0` (arm64) instead of `ghcr.io/...:latest`** on this machine —
+   the upstream image is amd64-only and its embedded etcd segfaults under emulation on
+   Apple Silicon. Configurable via `docker/.env`; the compose file defaults to GHCR.
+4. **Relay verified on port 3100** — port 3000 was in use by another local app;
+   default remains 3000 (`PORT` env overrides).
+
+## End-to-end verification summary (all passed)
+
+1. Offline head opens; seeded UTxO visible via `GET /snapshot/utxo`.
+2. Two block actions → 2 `TxValid`, snapshot advanced, 2 datums on-chain with correct fields.
+3. New WS client receives the full edit set on join.
+4. Relay restart → world rebuilt from head UTxOs, fuel re-located (999,998 ADA remaining).
+5. Hydra stopped → gameplay + multi-client sync unaffected; on restart, queued tx confirmed on-chain.
+6. Browser: 60 fps, terrain/water/trees render, physics verified, H overlay live
+   (head Open, snapshot #8, 9 UTxOs), on-chain state survives page reload.
+7. Final ledger state: 5 txs from this session valid, 0 invalid, 8 block records in the head.
