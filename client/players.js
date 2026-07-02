@@ -26,7 +26,7 @@ function nameSprite(name) {
   return sprite;
 }
 
-function buildAvatar(id, name) {
+export function buildAvatar(id, name) {
   const color = avatarColor(id);
   const skin = new THREE.Color(0xd8a077);
   const group = new THREE.Group();

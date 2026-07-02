@@ -8,12 +8,14 @@ const GRAVITY = 26;
 const JUMP_SPEED = 8.6;
 const WALK_SPEED = 5.2;
 const SPRINT_SPEED = 8.5;
+const SNEAK_SPEED = 1.8;
 const FLY_SPEED = 11;
 const SWIM_FACTOR = 0.55;
 const PLAYER_HALF_W = 0.3;
 const PLAYER_HEIGHT = 1.8;
 const EYE_HEIGHT = 1.62;
 const WATER = 8;
+const MAX_BREATH = 10; // seconds underwater
 
 export class Player {
   constructor(camera, world, domElement) {
@@ -32,13 +34,21 @@ export class Player {
     this.flying = false;
     this.inWater = false;
     this.eyeInWater = false;
+    this.sneaking = false;
+    this.sprinting = false;
     this.bobPhase = 0;
     this.bobAmount = 0;
     this.lastSpaceTap = 0;
+    this.lastWTap = 0;
+    this.wantSprint = false;
     this.wasFalling = 0;
+    this.breath = MAX_BREATH;
+    this.drownAccum = 0;
 
-    // event hooks (set by main.js): onJump, onLand, onSplash, onFlyToggle
+    // event hooks (set by main.js)
     this.onJump = this.onLand = this.onSplash = this.onFlyToggle = null;
+    this.onDrownTick = this.onStep = null;
+    this.lastStepPhase = 0;
 
     this.spawn();
     this.bindInput();
@@ -66,6 +76,7 @@ export class Player {
       this.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, this.pitch));
     });
     document.addEventListener('keydown', (e) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return; // chat open
       if (e.code === 'Space') {
         e.preventDefault();
         if (!e.repeat) {
@@ -78,9 +89,28 @@ export class Player {
           this.lastSpaceTap = now;
         }
       }
+      if (e.code === 'KeyW' && !e.repeat) {
+        const now = performance.now();
+        if (now - this.lastWTap < 300) this.wantSprint = true; // double-tap W
+        this.lastWTap = now;
+      }
       this.keys.add(e.code);
     });
-    document.addEventListener('keyup', (e) => this.keys.delete(e.code));
+    document.addEventListener('keyup', (e) => {
+      if (e.code === 'KeyW') this.wantSprint = false;
+      this.keys.delete(e.code); // always clear, even if chat consumed keydown
+    });
+  }
+
+  // any solid block directly under the AABB (sneak edge-guard)
+  hasSupport(pos) {
+    const y = Math.floor(pos.y - 0.05);
+    for (const dx of [-PLAYER_HALF_W, PLAYER_HALF_W]) {
+      for (const dz of [-PLAYER_HALF_W, PLAYER_HALF_W]) {
+        if (this.world.isSolid(Math.floor(pos.x + dx), y, Math.floor(pos.z + dz))) return true;
+      }
+    }
+    return false;
   }
 
   collides(pos) {
@@ -110,10 +140,13 @@ export class Player {
       this.world.getBlock(Math.floor(this.position.x), Math.floor(this.position.y + EYE_HEIGHT), Math.floor(this.position.z)) === WATER;
     if (this.inWater && !wasInWater && this.velocity.y < -4) this.onSplash?.();
 
-    // horizontal input in camera space
+    // horizontal input in camera space (Minecraft-style: shift sneak,
+    // double-tap-W or Ctrl sprint)
     const forward = (this.keys.has('KeyW') ? 1 : 0) - (this.keys.has('KeyS') ? 1 : 0);
     const strafe = (this.keys.has('KeyD') ? 1 : 0) - (this.keys.has('KeyA') ? 1 : 0);
-    let speed = this.flying ? FLY_SPEED : this.keys.has('ShiftLeft') && !this.inWater ? SPRINT_SPEED : WALK_SPEED;
+    this.sneaking = this.keys.has('ShiftLeft') && !this.flying && !this.inWater;
+    this.sprinting = !this.sneaking && forward > 0 && (this.wantSprint || this.keys.has('ControlLeft'));
+    let speed = this.flying ? FLY_SPEED : this.sneaking ? SNEAK_SPEED : this.sprinting ? SPRINT_SPEED : WALK_SPEED;
     if (this.inWater && !this.flying) speed *= SWIM_FACTOR;
 
     const sin = Math.sin(this.yaw), cos = Math.cos(this.yaw);
@@ -149,13 +182,13 @@ export class Player {
     const pos = this.position.clone();
 
     pos.x += this.velocity.x * dt;
-    if (this.collides(pos)) {
+    if (this.collides(pos) || (this.sneaking && this.onGround && !this.hasSupport(pos))) {
       pos.x = this.position.x;
       this.velocity.x = 0;
     }
 
     pos.z += this.velocity.z * dt;
-    if (this.collides(pos)) {
+    if (this.collides(pos) || (this.sneaking && this.onGround && !this.hasSupport(pos))) {
       pos.z = this.position.z;
       this.velocity.z = 0;
     }
@@ -180,17 +213,38 @@ export class Player {
     // fell out of the world -> respawn
     if (this.position.y < -20) this.spawn();
 
-    // head bob while walking on ground
+    // breath / drowning
+    if (this.eyeInWater && !this.flying) {
+      this.breath = Math.max(0, this.breath - dt);
+      if (this.breath <= 0) {
+        this.drownAccum += dt;
+        if (this.drownAccum >= 1) {
+          this.drownAccum = 0;
+          this.onDrownTick?.();
+        }
+      }
+    } else {
+      this.breath = Math.min(MAX_BREATH, this.breath + dt * 2.5);
+      this.drownAccum = 0;
+    }
+
+    // head bob while walking on ground + footstep events
     const moving = len > 0.5 && this.onGround && !this.flying;
     this.bobPhase += (moving ? len : 0) * dt * 1.65;
     this.bobAmount += ((moving ? 1 : 0) - this.bobAmount) * Math.min(1, dt * 8);
     const bobY = Math.sin(this.bobPhase * 2) * 0.05 * this.bobAmount;
     const bobX = Math.cos(this.bobPhase) * 0.035 * this.bobAmount;
+    if (moving && Math.floor(this.bobPhase / Math.PI) !== Math.floor(this.lastStepPhase / Math.PI)) {
+      const under = this.world.getBlock(Math.floor(this.position.x), Math.floor(this.position.y - 0.5), Math.floor(this.position.z));
+      if (under >= 0) this.onStep?.(under);
+    }
+    this.lastStepPhase = this.bobPhase;
 
-    // camera follows
+    // camera follows (eye drops slightly while sneaking)
+    const eye = EYE_HEIGHT - (this.sneaking ? 0.18 : 0);
     this.camera.position.set(
       this.position.x + Math.cos(this.yaw) * bobX,
-      this.position.y + EYE_HEIGHT + bobY,
+      this.position.y + eye + bobY,
       this.position.z - Math.sin(this.yaw) * bobX
     );
     this.camera.rotation.order = 'YXZ';

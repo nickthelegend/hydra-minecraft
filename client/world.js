@@ -7,12 +7,14 @@ export const BLOCKS = [
   { id: 0, name: 'Grass', color: 0x59a832, transparent: false, solid: true },
   { id: 1, name: 'Dirt', color: 0x7a5230, transparent: false, solid: true },
   { id: 2, name: 'Stone', color: 0x8a8a8a, transparent: false, solid: true },
-  { id: 3, name: 'Sand', color: 0xd9cd8e, transparent: false, solid: true },
+  { id: 3, name: 'Sand', color: 0xd9cd8e, transparent: false, solid: true, falls: true },
   { id: 4, name: 'Wood', color: 0x6b4a2b, transparent: false, solid: true },
   { id: 5, name: 'Leaves', color: 0x2e7d32, transparent: true, opacity: 0.9, solid: true },
   { id: 6, name: 'Glass', color: 0xbfe3f2, transparent: true, opacity: 0.35, solid: true },
   { id: 7, name: 'Brick', color: 0xa5442a, transparent: false, solid: true },
   { id: 8, name: 'Water', color: 0x2864c8, transparent: true, opacity: 0.55, solid: false },
+  // v3 extension to the original 0-8 datum spec: 9 = TNT (punch to ignite)
+  { id: 9, name: 'TNT', color: 0xd94534, transparent: false, solid: true, tnt: true },
 ];
 
 export const AIR = -1;
@@ -101,6 +103,27 @@ function hash2(x, z, seed) {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
+// classic red block with lighter bands and "TNT" lettering
+function tntTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#d94534';
+  ctx.fillRect(0, 0, 64, 64);
+  ctx.fillStyle = '#f2e7d5';
+  ctx.fillRect(0, 22, 64, 20);
+  ctx.fillStyle = '#3a3a3a';
+  ctx.font = 'bold 16px Menlo, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('TNT', 32, 38);
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.fillRect(0, 0, 64, 6);
+  ctx.fillRect(0, 58, 64, 6);
+  const tex = new THREE.CanvasTexture(c);
+  tex.magFilter = THREE.NearestFilter;
+  return tex;
+}
+
 // ---- world -----------------------------------------------------------------
 
 export class World {
@@ -109,13 +132,16 @@ export class World {
     this.blocks = new Uint8Array(SIZE_X * WORLD_HEIGHT * SIZE_Z); // 0 = air, else id+1
     this.chunkMeshes = new Map(); // "cx,cz" -> THREE.Group
     this.geometry = new THREE.BoxGeometry(1, 1, 1);
-    this.materials = BLOCKS.map((b) =>
-      new THREE.MeshLambertMaterial({
+    this.materials = BLOCKS.map((b) => {
+      if (b.tnt) {
+        return new THREE.MeshLambertMaterial({ map: tntTexture(), color: 0xffffff });
+      }
+      return new THREE.MeshLambertMaterial({
         color: b.color,
         transparent: b.transparent,
         opacity: b.opacity ?? 1,
-      })
-    );
+      });
+    });
     this.bounds = { minX: MIN_X, maxX: MIN_X + SIZE_X - 1, minZ: MIN_Z, maxZ: MIN_Z + SIZE_Z - 1 };
   }
 

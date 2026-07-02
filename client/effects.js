@@ -234,4 +234,132 @@ export class Sounds {
     src.connect(filter).connect(gain).connect(ctx.destination);
     src.start(t);
   }
+
+  explosion() {
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuffer(ctx, 1.1);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1600, t);
+    filter.frequency.exponentialRampToValueAtTime(60, t + 0.9);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(this.volume * 1.6, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+    src.connect(filter).connect(gain).connect(ctx.destination);
+    src.start(t);
+    const boom = ctx.createOscillator();
+    const bg = ctx.createGain();
+    boom.type = 'sine';
+    boom.frequency.setValueAtTime(90, t);
+    boom.frequency.exponentialRampToValueAtTime(28, t + 0.7);
+    bg.gain.setValueAtTime(this.volume * 1.2, t);
+    bg.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
+    boom.connect(bg).connect(ctx.destination);
+    boom.start(t);
+    boom.stop(t + 0.8);
+  }
+
+  fuse() {
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.value = 1500;
+    gain.gain.setValueAtTime(this.volume * 0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.09);
+  }
+
+  hurt() {
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.exponentialRampToValueAtTime(110, t + 0.16);
+    gain.gain.setValueAtTime(this.volume * 0.5, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.19);
+  }
+
+  bleat() {
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(420, t);
+    for (let i = 0; i < 6; i++) osc.frequency.setValueAtTime(i % 2 ? 380 : 440, t + i * 0.05);
+    gain.gain.setValueAtTime(this.volume * 0.22, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.33);
+  }
+
+  footstep(blockId) {
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuffer(ctx, 0.07);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    const stony = blockId === 2 || blockId === 7;
+    filter.frequency.value = stony ? 700 : blockId === 3 ? 400 : 260;
+    filter.Q.value = 1.1;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(this.volume * (stony ? 0.16 : 0.12), t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+    src.connect(filter).connect(gain).connect(ctx.destination);
+    src.start(t);
+  }
+
+  chirp() {
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    for (let i = 0; i < 2; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      const f = 2400 + Math.random() * 900;
+      osc.frequency.setValueAtTime(f, t + i * 0.14);
+      osc.frequency.exponentialRampToValueAtTime(f * 1.3, t + i * 0.14 + 0.08);
+      gain.gain.setValueAtTime(0, t + i * 0.14);
+      gain.gain.linearRampToValueAtTime(this.volume * 0.1, t + i * 0.14 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.14 + 0.11);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t + i * 0.14);
+      osc.stop(t + i * 0.14 + 0.12);
+    }
+  }
+
+  // gentle looping wind bed; call once, then setWind(0..1)
+  startWind() {
+    const ctx = this.ensure();
+    if (!ctx || this.windGain) return;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuffer(ctx, 2.5);
+    src.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 320;
+    this.windGain = ctx.createGain();
+    this.windGain.gain.value = this.volume * 0.05;
+    src.connect(filter).connect(this.windGain).connect(ctx.destination);
+    src.start();
+  }
 }

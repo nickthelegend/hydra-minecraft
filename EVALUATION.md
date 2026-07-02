@@ -79,6 +79,39 @@ Added on request ("minimap, break animations, everything you can think of"), ~1.
 
 v2 totals: **2,628 lines** across 19 files.
 
+## v3 update: "all the game mechanics" (same day, on request)
+
+Survival systems, world physics and ambient life — every world edit still flows
+through the same relay → Hydra path:
+
+- **Survival mode (G)**: hearts HUD, fall damage (scaled by impact), drowning
+  with breath bubbles, death screen + respawn, slow regen, damage flash +
+  camera shake; mined blocks drop as spinning item entities with magnet
+  pickup; placing consumes inventory (counts on the hotbar, 8 starter TNT)
+- **TNT (block id 9, hotbar 0)**: punch to ignite, blinking 2.2 s fuse,
+  sphere blast, knockback + blast damage, chain reactions — verified live: a
+  2-TNT chain produced **37 on-chain transactions, 0 invalid** in one burst
+- **Falling sand**: unsupported sand falls (mining, explosions, placing over
+  air), animated, re-recorded on-chain as break@top + place@bottom
+- **Sheep** (6): wander terrain avoiding water/cliffs, punchable with
+  knockback + bleat; simulated by the relay-elected host client, synced to
+  everyone, shown on the minimap
+- **Third person (F5)** with own avatar + wall-aware camera, **sneak** (shift:
+  slow, low camera, edge-guard), **sprint** (double-tap W / Ctrl),
+  **middle-click block picking**, hold-to-repeat placing
+- **Chat (T)** via the relay with per-client rate limiting
+- **Sky**: sun + moon billboards tracking the cycle, stars fading in at
+  night, drifting clouds; footstep sounds by surface, day birdsong, wind bed
+- 10-slot hotbar (1-9, 0), TNT canvas texture, death/hurt/explosion/fuse/
+  bleat procedural sounds
+
+v3 verification (all in-browser, real relay + hydra-node): mine→drop→pickup→
+place-consume loop; 12-block fall → 9 HP, 40-block fall → death → respawn;
+16 s underwater → 15 drowning damage; sand tower collapse; TNT chain
+explosion on-chain (records 74 → 111); sheep wander + knockback; chat
+round-trip; third-person camera pullback 4.0 with self-avatar. v3 totals:
+**3,779 lines** across 22 files.
+
 ## End-to-end verification summary (all passed)
 
 1. Offline head opens; seeded UTxO visible via `GET /snapshot/utxo`.

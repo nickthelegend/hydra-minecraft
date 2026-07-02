@@ -48,6 +48,11 @@ export class HydraRelayClient {
       else if (msg.type === 'players') this.onPlayers?.(msg.list);
       else if (msg.type === 'playerPos') this.onPlayerPos?.(msg);
       else if (msg.type === 'playerLeave') this.onPlayerLeave?.(msg.id);
+      else if (msg.type === 'hello') this.onHello?.(msg);
+      else if (msg.type === 'host') this.onHost?.(msg.id);
+      else if (msg.type === 'mobs') this.onMobs?.(msg.list);
+      else if (msg.type === 'mobHit') this.onMobHit?.(msg);
+      else if (msg.type === 'chat') this.onChat?.(msg);
     };
 
     this.ws.onclose = () => {
@@ -71,7 +76,11 @@ export class HydraRelayClient {
   }
 
   sendPos(x, y, z, yaw) {
+    this.send({ type: 'pos', x, y, z, yaw });
+  }
+
+  send(obj) {
     if (!this.connected || this.ws?.readyState !== WebSocket.OPEN) return;
-    this.ws.send(JSON.stringify({ type: 'pos', x, y, z, yaw }));
+    this.ws.send(JSON.stringify(obj));
   }
 }

@@ -31,18 +31,34 @@ npm start          # relay server; open http://localhost:3000 to play
 |---|---|
 | click | capture mouse (pointer lock) |
 | WASD / mouse | move / look |
-| space / shift | jump / sprint |
+| space | jump (swim up in water) |
+| **shift** | sneak: slow, lowered camera, can't walk off edges (descend in fly mode) |
+| **double-tap W** (or Ctrl) | sprint with FOV kick |
 | **double-tap space** | toggle fly mode (space up, shift down; landing exits) |
-| space (in water) | swim up — water has buoyancy, slow sink, underwater fog |
 | **hold left click** | mine block (crack stages + debris particles; hardness per material) |
+| left click on TNT | **ignite it** (2.2 s fuse, blinking, chain reactions) |
+| left click on a sheep | punch it (knockback, bleat) |
 | right click (hold to repeat) | place block |
-| 1–9 or scroll | select block (grass, dirt, stone, sand, wood, leaves, glass, brick, water) |
+| middle click | pick the block you're looking at |
+| 1–9, 0 or scroll | select block (grass, dirt, stone, sand, wood, leaves, glass, brick, water, TNT) |
+| **G** | toggle **survival mode**: hearts, fall/drowning damage, death & respawn, block drops with magnet pickup, placing consumes inventory (8 starter TNT) |
+| **F5** | third-person camera (see your own avatar) |
+| **T** | chat with other players |
 | **M** | toggle minimap (top-down world map, player arrow, other players) |
 | **H** | **Hydra debug overlay** (head status, tx counts, last snapshot + tx hash, UTxO count, fuel) |
 
 Multiplayer: open a second tab/browser — other players appear as blocky avatars
-with name tags, live position sync at 10 Hz, and every player's confirmed
-transactions scroll through the on-chain activity feed (bottom right).
+with name tags, live position sync at 10 Hz, chat, and every player's confirmed
+transactions scroll through the on-chain activity feed (bottom right). Six
+sheep wander the world (simulated by the first-connected client, relayed to
+everyone; punchable).
+
+World physics that ends up on-chain: **TNT explosions** break every block in
+the blast radius as individual Hydra transactions (a single explosion is a
+~30-80 tx burst — a nice L2 throughput demo), chain-react with nearby TNT and
+trigger **falling sand**, which is re-recorded as break-at-top + place-at-
+bottom by the client that caused it. Ambient life (sheep, item drops, clouds)
+is deliberately *not* recorded — only world edits are.
 
 ### Verifying it's real (not mocked)
 
@@ -69,8 +85,9 @@ transactions scroll through the on-chain activity feed (bottom right).
   - a fuel **change output**, spent by the next action (optimistic tx chaining).
 - Datum shape: `Constr 0 [Integer x, Integer y, Integer z, Integer blockTypeId, Integer action, Integer seq]`
   with `action` 0=place / 1=break, `blockTypeId` 0=grass 1=dirt 2=stone 3=sand 4=wood
-  5=leaves 6=glass 7=brick 8=water. The 6th field (`seq`) extends the base 5-field
-  spec so the unordered UTxO set can be replayed deterministically.
+  5=leaves 6=glass 7=brick 8=water 9=TNT. The 6th field (`seq`) extends the base
+  5-field spec so the unordered UTxO set can be replayed deterministically
+  (blockTypeId 9 is also an extension of the original 0-8 table).
 - On `SnapshotConfirmed`, the relay decodes the confirmed transactions' datums and
   broadcasts world deltas to all clients; live edits are also broadcast immediately so
   multiplayer stays snappy (and keeps working if Hydra is down).

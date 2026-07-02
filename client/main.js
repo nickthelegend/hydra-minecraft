@@ -1,6 +1,8 @@
-// Game entry point: Three.js scene, day/night cycle, mining/placing with
-// effects, multiplayer avatars, minimap, and the glue between local gameplay
-// and the Hydra relay.
+// Game entry point: Three.js scene, day/night cycle, survival systems,
+// mining/placing/TNT with effects, mobs, multiplayer, minimap, chat — and the
+// glue between local gameplay and the Hydra relay. Every world edit (player
+// mining, TNT explosions, falling sand) flows through the same relay path and
+// becomes an on-chain Hydra transaction.
 
 import * as THREE from 'three';
 import { World, BLOCKS, AIR } from './world.js';
@@ -10,14 +12,19 @@ import { UI } from './ui.js';
 import { HydraRelayClient } from './hydra-client.js';
 import { Minimap } from './minimap.js';
 import { Particles, CrackOverlay, Sounds } from './effects.js';
-import { RemotePlayers } from './players.js';
+import { RemotePlayers, buildAvatar } from './players.js';
+import { ItemDrops } from './items.js';
+import { Sky } from './sky.js';
+import { Mobs } from './mobs.js';
 
 const ACTION_PLACE = 0;
 const ACTION_BREAK = 1;
-const DAY_LENGTH_S = 600; // full day/night cycle
+const DAY_LENGTH_S = 600;
+const WATER = 8;
+const TNT = 9;
 
-// seconds of mining per block type (hold left mouse)
-const HARDNESS = [0.3, 0.35, 0.85, 0.28, 0.55, 0.12, 0.18, 0.85, Infinity];
+// seconds of mining per block type (hold left mouse); TNT ignites instead
+const HARDNESS = [0.3, 0.35, 0.85, 0.28, 0.55, 0.12, 0.18, 0.85, Infinity, Infinity];
 
 // ---- renderer / scene ------------------------------------------------------
 
@@ -32,8 +39,8 @@ const NIGHT_SKY = new THREE.Color(0x10162e);
 scene.background = DAY_SKY.clone();
 scene.fog = new THREE.Fog(scene.background, 40, 140);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 400);
-scene.add(camera); // so camera-attached objects (held block) render
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 700);
+scene.add(camera);
 
 const ambient = new THREE.AmbientLight(0xffffff, 0.55);
 scene.add(ambient);
@@ -47,7 +54,7 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// ---- world / player / ui / effects ------------------------------------------
+// ---- world / player / ui / systems ------------------------------------------
 
 const world = new World(scene);
 world.generate();
@@ -59,13 +66,79 @@ const particles = new Particles(scene);
 const crack = new CrackOverlay(scene);
 const sounds = new Sounds();
 const remotePlayers = new RemotePlayers(scene);
+const drops = new ItemDrops(scene, world, world.materials);
+const sky = new Sky(scene);
+const mobs = new Mobs(scene, world);
 const minimap = new Minimap(world, document.getElementById('minimap'));
 const underwaterEl = document.getElementById('underwater');
+const damageFlashEl = document.getElementById('damage-flash');
 
+// ---- health / survival -------------------------------------------------------
+
+let hp = 20;
+let dead = false;
+let regenT = 0;
+let shakeT = 0;
+let myId = null;
+
+function damage(n, { shake = 0.25 } = {}) {
+  if (ui.mode !== 'survival' || dead) return;
+  hp = Math.max(0, hp - n);
+  ui.updateHealth(hp);
+  sounds.hurt();
+  shakeT = Math.max(shakeT, shake);
+  damageFlashEl.style.opacity = '1';
+  setTimeout(() => { damageFlashEl.style.opacity = '0'; }, 120);
+  if (hp <= 0) die();
+}
+
+function die() {
+  dead = true;
+  ui.showDeath(true);
+  document.exitPointerLock?.();
+}
+
+function respawn() {
+  dead = false;
+  hp = 20;
+  ui.updateHealth(hp);
+  ui.showDeath(false);
+  player.spawn();
+}
+document.getElementById('death-overlay').addEventListener('click', () => {
+  respawn();
+  canvas.requestPointerLock();
+});
+
+ui.onModeToggle = () => {
+  const next = ui.mode === 'creative' ? 'survival' : 'creative';
+  if (next === 'survival' && ui.counts.every((c) => c === 0)) {
+    ui.counts[TNT] = 8; // starter dynamite — mine everything else
+  }
+  ui.setMode(next);
+  hp = 20;
+  ui.updateHealth(hp);
+  ui.addChat('system', next === 'survival'
+    ? 'survival mode: mine blocks to collect them, watch your hearts. G to go back.'
+    : 'creative mode: infinite blocks, no damage.', false);
+};
+
+drops.onPickup = (blockId) => {
+  ui.addItem(blockId);
+  sounds.place();
+};
+
+// player event hooks
 player.onJump = () => sounds.jump();
-player.onLand = () => sounds.place(); // soft thud on landing
 player.onSplash = () => sounds.splash();
-canvas.addEventListener('click', () => sounds.ensure(), { once: true });
+player.onStep = (blockId) => sounds.footstep(blockId);
+player.onLand = (impact) => {
+  sounds.place();
+  const excess = -impact - 11; // ~3 block drop is safe
+  if (excess > 0) damage(Math.ceil(excess * 0.9), { shake: 0.35 });
+};
+player.onDrownTick = () => damage(2, { shake: 0.15 });
+canvas.addEventListener('click', () => { sounds.ensure(); sounds.startWind(); }, { once: true });
 
 // edits that arrive before terrain meshes exist are buffered
 let meshesBuilt = false;
@@ -76,7 +149,7 @@ function applyEdit(x, y, z, blockTypeId, rebuild = true) {
   minimap.markDirty(x, z);
 }
 
-// ---- held block ("hand") ------------------------------------------------------
+// ---- held block ("hand") + third person ---------------------------------------
 
 const hand = new THREE.Group();
 const handBlock = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), world.materials[0]);
@@ -88,12 +161,22 @@ hand.add(handBlock, handEdges);
 hand.position.set(0.5, -0.42, -0.85);
 hand.rotation.set(0.25, -0.6, 0.08);
 camera.add(hand);
-let handSwing = 0; // 1 = just swung
+let handSwing = 0;
 
-ui.onSelect = (id) => {
-  handBlock.material = world.materials[id];
-};
+ui.onSelect = (id) => { handBlock.material = world.materials[id]; };
 ui.onSelect(ui.selectedBlockId);
+
+let thirdPerson = false;
+const selfAvatar = buildAvatar(0, 'you');
+selfAvatar.visible = false;
+scene.add(selfAvatar);
+document.addEventListener('keydown', (e) => {
+  if (e.target instanceof HTMLInputElement) return;
+  if (e.code === 'F5') {
+    e.preventDefault();
+    thirdPerson = !thirdPerson;
+  }
+});
 
 // ---- hydra relay ----------------------------------------------------------------
 
@@ -101,7 +184,6 @@ let serverOnline = false;
 const relay = new HydraRelayClient({
   onConnectionChange: (up) => { serverOnline = up; },
 
-  // full world reconstruction on join: [[x,y,z,blockTypeIdOrAir(-1)], ...]
   onWorldState: (blocks) => {
     console.log(`[hydra-client] world state: ${blocks.length} edits`);
     for (const [x, y, z, t] of blocks) {
@@ -110,7 +192,9 @@ const relay = new HydraRelayClient({
     }
   },
 
-  // real-time delta from another player (or a confirmed Hydra snapshot)
+  // real-time delta from another player (or a confirmed Hydra snapshot).
+  // NOTE: physics (sand, TNT) is simulated by the *originating* client and
+  // arrives here as plain block events — never re-simulated, so no dupes.
   onBlockUpdate: ({ x, y, z, blockTypeId, action }) => {
     applyEdit(x, y, z, action === ACTION_BREAK ? AIR : blockTypeId, true);
     if (action === ACTION_BREAK) particles.burst(x, y, z, blockTypeId, 10);
@@ -122,8 +206,14 @@ const relay = new HydraRelayClient({
   onPlayerPos: (p) => remotePlayers.upsert(p),
   onPlayerLeave: (id) => remotePlayers.remove(id),
 });
+relay.onHello = ({ id, name }) => { myId = id; ui.addChat('system', `connected as ${name}`, false); };
+relay.onHost = (id) => { if (id === myId) mobs.becomeHost(); };
+relay.onMobs = (list) => mobs.applyState(list);
+relay.onMobHit = ({ id, ix, iz }) => { if (mobs.isHost) mobs.applyHit(id, ix, iz); };
+relay.onChat = ({ id, name, text }) => ui.addChat(name, text, id === myId);
+ui.onChatSend = (text) => { relay.send({ type: 'chat', text }); canvas.requestPointerLock(); };
+mobs.sendState = (list) => relay.send({ type: 'mobs', list });
 
-// broadcast our position at 10 Hz
 setInterval(() => {
   if (serverOnline) relay.sendPos(
     Number(player.position.x.toFixed(2)),
@@ -133,7 +223,7 @@ setInterval(() => {
   );
 }, 100);
 
-// ---- block interaction: hold-to-mine + place ------------------------------------
+// ---- block breaking / placing / TNT / falling sand ------------------------------
 
 function playerIntersects(x, y, z) {
   const p = player.position;
@@ -143,6 +233,136 @@ function playerIntersects(x, y, z) {
     y + 1 > p.y && y < p.y + 1.8
   );
 }
+
+// the single exit point for every locally-caused world edit
+function sendEdit(x, y, z, blockTypeId, action) {
+  relay.sendBlockEvent(x, y, z, blockTypeId, action);
+  ui.countTxSubmitted();
+}
+
+function breakBlock(x, y, z, blockId, { drop = true, fx = true } = {}) {
+  applyEdit(x, y, z, AIR);
+  if (fx) {
+    particles.burst(x, y, z, blockId);
+    sounds.break_(blockId);
+  }
+  if (drop && ui.mode === 'survival' && blockId !== WATER) drops.drop(x, y, z, blockId);
+  sendEdit(x, y, z, blockId, ACTION_BREAK);
+  checkFallingSand(x, y + 1, z);
+}
+
+// sand falls when its support disappears; the fall is re-recorded on-chain as
+// break@top + place@bottom by the client that caused it
+const fallingBlocks = [];
+function checkFallingSand(x, y, z) {
+  const id = world.getBlock(x, y, z);
+  if (id === AIR || !BLOCKS[id].falls) return;
+  if (world.getBlock(x, y - 1, z) !== AIR) return;
+  // find landing cell (stacked falls in the same column land one higher each)
+  let landY = y - 1;
+  while (landY > 0 && world.getBlock(x, landY - 1, z) === AIR) landY--;
+  landY += fallingBlocks.filter((f) => f.x === x && f.z === z).length;
+  applyEdit(x, y, z, AIR);
+  sendEdit(x, y, z, id, ACTION_BREAK);
+  const mesh = new THREE.Mesh(world.geometry, world.materials[id]);
+  mesh.position.set(x + 0.5, y + 0.5, z + 0.5);
+  scene.add(mesh);
+  fallingBlocks.push({ mesh, x, z, id, vy: 0, targetY: landY });
+  checkFallingSand(x, y + 1, z); // the block above may fall too
+}
+
+function updateFallingBlocks(dt) {
+  for (let i = fallingBlocks.length - 1; i >= 0; i--) {
+    const f = fallingBlocks[i];
+    f.vy -= 22 * dt;
+    f.mesh.position.y += f.vy * dt;
+    if (f.mesh.position.y <= f.targetY + 0.5) {
+      scene.remove(f.mesh);
+      fallingBlocks.splice(i, 1);
+      applyEdit(f.x, f.targetY, f.z, f.id);
+      sendEdit(f.x, f.targetY, f.z, f.id, ACTION_PLACE);
+      sounds.place();
+    }
+  }
+}
+
+// TNT: punch to ignite; every block the blast destroys is an on-chain break
+const primedTnt = [];
+function igniteTnt(x, y, z, fuse = 2.2) {
+  applyEdit(x, y, z, AIR);
+  sendEdit(x, y, z, TNT, ACTION_BREAK); // the TNT block itself leaves the world
+  const mesh = new THREE.Mesh(world.geometry, world.materials[TNT].clone());
+  mesh.position.set(x + 0.5, y + 0.5, z + 0.5);
+  scene.add(mesh);
+  primedTnt.push({ mesh, x, y, z, t: fuse, blink: 0 });
+  sounds.fuse();
+}
+
+function explode(x, y, z) {
+  const R = 2.9;
+  sounds.explosion();
+  shakeT = Math.max(shakeT, 0.7);
+  particles.burst(x, y, z, TNT, 30);
+  particles.burst(x, y, z, 2, 24);
+
+  for (let dx = -3; dx <= 3; dx++) {
+    for (let dy = -3; dy <= 3; dy++) {
+      for (let dz = -3; dz <= 3; dz++) {
+        if (dx * dx + dy * dy + dz * dz > R * R) continue;
+        const bx = x + dx, by = y + dy, bz = z + dz;
+        const id = world.getBlock(bx, by, bz);
+        if (id === AIR || id === WATER) continue;
+        if (id === TNT) {
+          igniteTnt(bx, by, bz, 0.25 + Math.random() * 0.4); // chain reaction
+          continue;
+        }
+        applyEdit(bx, by, bz, AIR, false);
+        minimap.markDirty(bx, bz);
+        sendEdit(bx, by, bz, id, ACTION_BREAK);
+      }
+    }
+  }
+  // rebuild the touched chunks once
+  for (const [cx, cz] of [[x - 3, z - 3], [x + 3, z - 3], [x - 3, z + 3], [x + 3, z + 3], [x, z]]) {
+    world.rebuildChunkAt(cx, cz, true);
+  }
+  for (let dx = -4; dx <= 4; dx += 2) {
+    for (let dz = -4; dz <= 4; dz += 2) checkFallingSand(x + dx, y + 4, z + dz);
+  }
+
+  // knockback + blast damage
+  const to = player.position.clone().add(new THREE.Vector3(0, 0.9, 0)).sub(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5));
+  const d = to.length();
+  if (d < 7) {
+    const k = (1 - d / 7);
+    player.velocity.addScaledVector(to.normalize(), k * 14);
+    player.velocity.y += k * 6;
+    damage(Math.ceil(k * 12), { shake: 0.6 });
+  }
+}
+
+function updateTnt(dt) {
+  for (let i = primedTnt.length - 1; i >= 0; i--) {
+    const p = primedTnt[i];
+    p.t -= dt;
+    p.blink += dt;
+    if (p.blink > 0.18) {
+      p.blink = 0;
+      p.mesh.material.emissive = new THREE.Color(p.mesh.material.emissive?.r ? 0x000000 : 0xffffff);
+      p.mesh.material.emissiveIntensity = 0.7;
+      sounds.fuse();
+    }
+    const s = 1 + Math.max(0, 0.35 - p.t * 0.15);
+    p.mesh.scale.setScalar(Math.min(1.15, s));
+    if (p.t <= 0) {
+      scene.remove(p.mesh);
+      primedTnt.splice(i, 1);
+      explode(p.x, p.y, p.z);
+    }
+  }
+}
+
+// ---- mouse interaction ------------------------------------------------------------
 
 const mining = { active: false, key: null, progress: 0, lastStage: -1 };
 
@@ -154,33 +374,36 @@ function resetMining() {
   crack.hide();
 }
 
-function finishBreak(hit) {
-  applyEdit(hit.x, hit.y, hit.z, AIR);
-  particles.burst(hit.x, hit.y, hit.z, hit.blockId);
-  sounds.break_(hit.blockId);
-  relay.sendBlockEvent(hit.x, hit.y, hit.z, hit.blockId, ACTION_BREAK);
-  ui.countTxSubmitted();
-  handSwing = 1;
-}
-
 function tryPlace() {
   const hit = raycaster.target;
   if (!hit) return;
   const cell = raycaster.placementCell();
   if (!cell || !world.inBounds(cell.x, cell.y, cell.z)) return;
   const current = world.getBlock(cell.x, cell.y, cell.z);
-  if (current !== AIR && current !== 8) return; // only into air/water
+  if (current !== AIR && current !== WATER) return;
   const id = ui.selectedBlockId;
   if (BLOCKS[id].solid && playerIntersects(cell.x, cell.y, cell.z)) return;
+  if (!ui.consumeSelected()) return; // survival: need the block in inventory
+
+  // sand placed over air falls immediately
+  if (BLOCKS[id].falls && world.getBlock(cell.x, cell.y - 1, cell.z) === AIR) {
+    let landY = cell.y - 1;
+    while (landY > 0 && world.getBlock(cell.x, landY - 1, cell.z) === AIR) landY--;
+    const mesh = new THREE.Mesh(world.geometry, world.materials[id]);
+    mesh.position.set(cell.x + 0.5, cell.y + 0.5, cell.z + 0.5);
+    scene.add(mesh);
+    fallingBlocks.push({ mesh, x: cell.x, z: cell.z, id, vy: 0, targetY: landY });
+    handSwing = 1;
+    return;
+  }
+
   applyEdit(cell.x, cell.y, cell.z, id);
   popIn(cell.x, cell.y, cell.z, id);
   sounds.place();
-  relay.sendBlockEvent(cell.x, cell.y, cell.z, id, ACTION_PLACE);
-  ui.countTxSubmitted();
+  sendEdit(cell.x, cell.y, cell.z, id, ACTION_PLACE);
   handSwing = 1;
 }
 
-// short scale-in animation over a freshly placed block
 const pops = [];
 function popIn(x, y, z, id) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), world.materials[id]);
@@ -192,14 +415,41 @@ function popIn(x, y, z, id) {
 
 let placeTimer = null;
 canvas.addEventListener('mousedown', (e) => {
-  if (!player.locked) return;
+  if (!player.locked || dead) return;
+
   if (e.button === 0) {
+    // punch a sheep?
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    const mobId = mobs.raycastMob(camera.position, dir);
+    if (mobId !== null) {
+      sounds.bleat();
+      handSwing = 1;
+      const kx = dir.x, kz = dir.z;
+      if (mobs.isHost) mobs.applyHit(mobId, kx, kz);
+      else relay.send({ type: 'mobHit', id: mobId, ix: kx, iz: kz });
+      return;
+    }
+    // punch TNT -> ignite
+    const hit = raycaster.target;
+    if (hit && hit.blockId === TNT) {
+      igniteTnt(hit.x, hit.y, hit.z);
+      handSwing = 1;
+      return;
+    }
     mining.active = true;
   }
+
+  if (e.button === 1) { // middle click: pick block
+    e.preventDefault();
+    const hit = raycaster.target;
+    if (hit) ui.select(hit.blockId);
+  }
+
   if (e.button === 2) {
     tryPlace();
     clearInterval(placeTimer);
-    placeTimer = setInterval(tryPlace, 260); // auto-repeat while held
+    placeTimer = setInterval(tryPlace, 260);
   }
 });
 document.addEventListener('mouseup', (e) => {
@@ -213,11 +463,11 @@ document.addEventListener('pointerlockchange', () => {
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
 function updateMining(dt) {
-  if (!mining.active || !player.locked) return;
+  if (!mining.active || !player.locked || dead) return;
   const hit = raycaster.target;
-  if (!hit) {
+  if (!hit || hit.blockId === TNT) {
     resetMining();
-    mining.active = true; // still holding: resume when a block is targeted
+    mining.active = true;
     return;
   }
   const key = `${hit.x},${hit.y},${hit.z}`;
@@ -237,7 +487,8 @@ function updateMining(dt) {
     handSwing = Math.max(handSwing, 0.55);
   }
   if (mining.progress >= required) {
-    finishBreak(hit);
+    breakBlock(hit.x, hit.y, hit.z, hit.blockId);
+    handSwing = 1;
     mining.key = null;
     mining.progress = 0;
     mining.lastStage = -1;
@@ -245,19 +496,22 @@ function updateMining(dt) {
   }
 }
 
-// ---- day / night cycle --------------------------------------------------------------
+// ---- day / night ------------------------------------------------------------------
 
 const skyColor = new THREE.Color();
 const UNDERWATER_FOG = new THREE.Color(0x14418c);
-function updateDayNight(elapsed) {
-  const phase = ((elapsed / DAY_LENGTH_S) + 0.12) % 1; // 0..1, starts mid-morning
+let lastDaylight = 1;
+function updateDayNight(dt, elapsed) {
+  const phase = ((elapsed / DAY_LENGTH_S) + 0.12) % 1;
   const angle = phase * Math.PI * 2;
   sun.position.set(Math.cos(angle) * 100, Math.sin(angle) * 100, 40);
-  const daylight = Math.max(0, Math.sin(angle)) ** 0.7; // longer usable daylight
+  const daylight = Math.max(0, Math.sin(angle)) ** 0.7;
+  lastDaylight = daylight;
   sun.intensity = 0.25 + daylight * 0.95;
   ambient.intensity = 0.4 + daylight * 0.32;
   skyColor.copy(NIGHT_SKY).lerp(DAY_SKY, Math.min(1, daylight * 1.35));
   scene.background.copy(skyColor);
+  sky.update(dt, angle, daylight, player.position);
 
   if (player.eyeInWater) {
     scene.fog.color.copy(UNDERWATER_FOG);
@@ -272,6 +526,9 @@ function updateDayNight(elapsed) {
   }
 }
 
+// ambient birds during the day
+let chirpT = 8;
+
 // ---- boot -----------------------------------------------------------------------------
 
 world.buildAllChunks();
@@ -282,6 +539,7 @@ if (pendingEdits.length) {
   world.buildAllChunks();
 }
 minimap.renderAll();
+ui.updateHealth(hp);
 
 let last = performance.now();
 let fpsSmooth = 60;
@@ -295,28 +553,67 @@ function animate(now) {
 }
 
 function step(dt, now = performance.now()) {
-  dt = Math.min(dt, 0.1); // RAF can pause in background tabs; avoid huge steps
+  dt = Math.min(dt, 0.1);
   fpsSmooth = fpsSmooth * 0.95 + (1 / Math.max(dt, 1e-4)) * 0.05;
 
-  player.update(dt);
+  if (!dead) player.update(dt);
   const hit = raycaster.update();
   updateMining(dt);
+  updateTnt(dt);
+  updateFallingBlocks(dt);
   particles.update(dt);
+  drops.update(dt, player.position);
   remotePlayers.update(dt);
-  updateDayNight((now - start) / 1000);
+  mobs.update(dt);
+  updateDayNight(dt, (now - start) / 1000);
 
-  // held block swing + bob
+  // ambient chirps in daylight
+  chirpT -= dt;
+  if (chirpT <= 0) {
+    chirpT = 10 + Math.random() * 22;
+    if (lastDaylight > 0.35) sounds.chirp();
+  }
+
+  // held block swing + bob (first person only)
   handSwing = Math.max(0, handSwing - dt * 5);
   const swingK = Math.sin(handSwing * Math.PI);
+  hand.visible = !thirdPerson;
   hand.rotation.x = 0.25 - swingK * 0.9;
   hand.position.y = -0.42 - swingK * 0.1 + Math.sin(player.bobPhase * 2) * 0.02 * player.bobAmount;
   hand.position.z = -0.85 - swingK * 0.12;
 
   // sprint / fly FOV kick
-  const sprinting = player.keys.has('ShiftLeft') && player.horizontalSpeed > 6 && !player.flying;
-  const targetFov = player.flying ? 80 : sprinting ? 83 : 75;
+  const targetFov = player.flying ? 80 : player.sprinting ? 83 : 75;
   camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 8);
   camera.updateProjectionMatrix();
+
+  // third person: pull the camera back along the view ray (with wall backoff)
+  selfAvatar.visible = thirdPerson;
+  if (thirdPerson) {
+    selfAvatar.position.copy(player.position);
+    selfAvatar.rotation.y = player.yaw;
+    const back = new THREE.Vector3();
+    camera.getWorldDirection(back).negate();
+    let dist = 4;
+    const eye = camera.position.clone();
+    for (let d = 0.5; d <= 4; d += 0.25) {
+      const p = eye.clone().addScaledVector(back, d);
+      if (world.isSolid(Math.floor(p.x), Math.floor(p.y), Math.floor(p.z))) {
+        dist = d - 0.35;
+        break;
+      }
+    }
+    camera.position.addScaledVector(back, dist);
+  }
+
+  // camera shake (damage / explosions)
+  if (shakeT > 0) {
+    shakeT = Math.max(0, shakeT - dt);
+    const s = shakeT * 0.35;
+    camera.position.x += (Math.random() - 0.5) * s;
+    camera.position.y += (Math.random() - 0.5) * s;
+    camera.position.z += (Math.random() - 0.5) * s;
+  }
 
   // placed-block pop animation
   for (let i = pops.length - 1; i >= 0; i--) {
@@ -330,14 +627,26 @@ function step(dt, now = performance.now()) {
     }
   }
 
+  // HUD
+  ui.updateBreath(player.breath, 10, player.eyeInWater && ui.mode === 'survival');
+  if (ui.mode === 'survival' && !dead) {
+    regenT += dt;
+    if (regenT > 4 && hp < 20 && hp > 0) {
+      regenT = 0;
+      hp = Math.min(20, hp + 1);
+      ui.updateHealth(hp);
+    }
+  }
+
   minimap.draw(player.position, player.yaw, remotePlayers.positions());
   ui.updateDebug({
     fps: fpsSmooth,
     position: player.position,
     targetBlock: hit,
     online: serverOnline,
-    mode: player.flying ? 'flying' : player.inWater ? 'swimming' : 'walking',
+    mode: player.flying ? 'flying' : player.inWater ? 'swimming' : player.sneaking ? 'sneaking' : 'walking',
     others: remotePlayers.count,
+    mobs: mobs.count,
   });
   renderer.render(scene, camera);
 }
@@ -345,4 +654,9 @@ requestAnimationFrame(animate);
 
 // debug/console handle (also used by automated tests; step() lets tests pump
 // frames deterministically when the tab is backgrounded and RAF is paused)
-window.__game = { world, player, ui, relay, raycaster, applyEdit, remotePlayers, minimap, particles, step };
+window.__game = {
+  world, player, ui, relay, raycaster, applyEdit, remotePlayers, minimap,
+  particles, drops, mobs, sky, step, igniteTnt, breakBlock,
+  get hp() { return hp; },
+  get dead() { return dead; },
+};

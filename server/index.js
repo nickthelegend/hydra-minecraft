@@ -78,18 +78,30 @@ function statsMessage() {
 }
 
 let nextPlayerId = 1;
+let hostId = null; // the client simulating ambient mobs
 const playerPositions = new Map(); // id -> { id, name, x, y, z, yaw }
+
+function pickHost() {
+  const clients = [...wss.clients].filter((c) => c.readyState === WebSocket.OPEN);
+  const next = clients.sort((a, b) => a.playerId - b.playerId)[0];
+  hostId = next ? next.playerId : null;
+  if (next) broadcast({ type: 'host', id: hostId });
+}
 
 wss.on('connection', (ws) => {
   ws.playerId = nextPlayerId++;
   ws.playerName = `steve-${ws.playerId}`;
+  ws.lastChat = 0;
   console.log(`[relay] ${ws.playerName} connected (${wss.clients.size} online)`);
 
-  // New client: full edit set reconstructed from the Hydra head (or
-  // accumulated locally if Hydra is down) + who else is around.
+  // New client: identity, full edit set reconstructed from the Hydra head
+  // (or accumulated locally if Hydra is down) + who else is around.
+  ws.send(JSON.stringify({ type: 'hello', id: ws.playerId, name: ws.playerName }));
   ws.send(JSON.stringify({ type: 'worldState', blocks: world.toCompactArray() }));
   ws.send(JSON.stringify(statsMessage()));
   ws.send(JSON.stringify({ type: 'players', list: [...playerPositions.values()] }));
+  if (hostId === null) pickHost();
+  else ws.send(JSON.stringify({ type: 'host', id: hostId }));
 
   ws.on('message', (raw) => {
     let msg;
@@ -99,32 +111,63 @@ wss.on('connection', (ws) => {
       return;
     }
 
-    if (msg.type === 'pos') {
-      const { x, y, z, yaw } = msg;
-      if (![x, y, z, yaw].every(Number.isFinite)) return;
-      const p = { id: ws.playerId, name: ws.playerName, x, y, z, yaw };
-      playerPositions.set(ws.playerId, p);
-      broadcast({ type: 'playerPos', ...p }, ws);
-      return;
+    switch (msg.type) {
+      case 'pos': {
+        const { x, y, z, yaw } = msg;
+        if (![x, y, z, yaw].every(Number.isFinite)) return;
+        const p = { id: ws.playerId, name: ws.playerName, x, y, z, yaw };
+        playerPositions.set(ws.playerId, p);
+        broadcast({ type: 'playerPos', ...p }, ws);
+        return;
+      }
+
+      case 'mobs': // host broadcasts ambient mob state (not recorded on-chain)
+        if (ws.playerId !== hostId || !Array.isArray(msg.list) || msg.list.length > 32) return;
+        broadcast({ type: 'mobs', list: msg.list }, ws);
+        return;
+
+      case 'mobHit': { // route a punch to the simulation host
+        for (const c of wss.clients) {
+          if (c.playerId === hostId && c.readyState === WebSocket.OPEN) {
+            c.send(JSON.stringify({ type: 'mobHit', id: msg.id, ix: msg.ix, iz: msg.iz }));
+          }
+        }
+        return;
+      }
+
+      case 'chat': {
+        const now = Date.now();
+        if (typeof msg.text !== 'string' || now - ws.lastChat < 750) return;
+        ws.lastChat = now;
+        const text = msg.text.slice(0, 140).trim();
+        if (text) broadcast({ type: 'chat', id: ws.playerId, name: ws.playerName, text });
+        return;
+      }
+
+      case 'blockEvent': {
+        const { x, y, z, blockTypeId, action } = msg;
+        if (![x, y, z, blockTypeId, action].every(Number.isInteger)) return;
+        if (blockTypeId < 0 || blockTypeId > 9 || (action !== 0 && action !== 1)) return; // 9 = TNT
+
+        // 1. apply + real-time sync to all other clients immediately
+        world.apply({ x, y, z, blockTypeId, action });
+        rememberLocal({ x, y, z, blockTypeId, action });
+        broadcast({ type: 'blockUpdate', x, y, z, blockTypeId, action, confirmed: false }, ws);
+
+        // 2. fire-and-forget on-chain record via Hydra
+        hydra.submitBlockAction({ x, y, z, blockTypeId, action });
+        return;
+      }
+
+      default:
+        return;
     }
-
-    if (msg.type !== 'blockEvent') return;
-    const { x, y, z, blockTypeId, action } = msg;
-    if (![x, y, z, blockTypeId, action].every(Number.isInteger)) return;
-    if (blockTypeId < 0 || blockTypeId > 8 || (action !== 0 && action !== 1)) return;
-
-    // 1. apply + real-time sync to all other clients immediately
-    world.apply({ x, y, z, blockTypeId, action });
-    rememberLocal({ x, y, z, blockTypeId, action });
-    broadcast({ type: 'blockUpdate', x, y, z, blockTypeId, action, confirmed: false }, ws);
-
-    // 2. fire-and-forget on-chain record via Hydra
-    hydra.submitBlockAction({ x, y, z, blockTypeId, action });
   });
 
   ws.on('close', () => {
     playerPositions.delete(ws.playerId);
     broadcast({ type: 'playerLeave', id: ws.playerId });
+    if (ws.playerId === hostId) pickHost();
     console.log(`[relay] ${ws.playerName} disconnected (${wss.clients.size} online)`);
   });
 });
