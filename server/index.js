@@ -41,6 +41,25 @@ const app = express();
 app.use(express.static(path.join(root, 'client')));
 app.get('/health', (_req, res) => res.json({ ok: true, hydra: hydra.stats, edits: world.edits.size }));
 
+// on-chain explorer: every block action as recorded in the Hydra head, with
+// its real L2 transaction hash and raw datum CBOR — proof nothing is mocked
+app.get('/chain', async (_req, res) => {
+  try {
+    const utxoMap = await hydra.fetchUtxo();
+    const records = hydra.extractBlockActions(utxoMap).map((r) => ({
+      seq: r.seq,
+      txHash: r.txHash,
+      action: r.action === 0 ? 'place' : 'break',
+      block: r.blockTypeId,
+      x: r.x, y: r.y, z: r.z,
+      datumCbor: r.datumCbor,
+    }));
+    res.json({ headUtxoCount: Object.keys(utxoMap).length, records });
+  } catch (err) {
+    res.status(503).json({ error: `hydra unreachable: ${err.message}` });
+  }
+});
+
 const server = app.listen(PORT, () => {
   console.log(`[relay] game running at http://localhost:${PORT}`);
 });
@@ -58,13 +77,19 @@ function statsMessage() {
   return { type: 'hydraStats', ...hydra.stats, connected: hydra.connected, queued: hydra.queue.length };
 }
 
-wss.on('connection', (ws) => {
-  console.log(`[relay] client connected (${wss.clients.size} online)`);
+let nextPlayerId = 1;
+const playerPositions = new Map(); // id -> { id, name, x, y, z, yaw }
 
-  // New client: send the full edit set reconstructed from the Hydra head
-  // (or accumulated locally if Hydra is down).
+wss.on('connection', (ws) => {
+  ws.playerId = nextPlayerId++;
+  ws.playerName = `steve-${ws.playerId}`;
+  console.log(`[relay] ${ws.playerName} connected (${wss.clients.size} online)`);
+
+  // New client: full edit set reconstructed from the Hydra head (or
+  // accumulated locally if Hydra is down) + who else is around.
   ws.send(JSON.stringify({ type: 'worldState', blocks: world.toCompactArray() }));
   ws.send(JSON.stringify(statsMessage()));
+  ws.send(JSON.stringify({ type: 'players', list: [...playerPositions.values()] }));
 
   ws.on('message', (raw) => {
     let msg;
@@ -73,8 +98,17 @@ wss.on('connection', (ws) => {
     } catch {
       return;
     }
-    if (msg.type !== 'blockEvent') return;
 
+    if (msg.type === 'pos') {
+      const { x, y, z, yaw } = msg;
+      if (![x, y, z, yaw].every(Number.isFinite)) return;
+      const p = { id: ws.playerId, name: ws.playerName, x, y, z, yaw };
+      playerPositions.set(ws.playerId, p);
+      broadcast({ type: 'playerPos', ...p }, ws);
+      return;
+    }
+
+    if (msg.type !== 'blockEvent') return;
     const { x, y, z, blockTypeId, action } = msg;
     if (![x, y, z, blockTypeId, action].every(Number.isInteger)) return;
     if (blockTypeId < 0 || blockTypeId > 8 || (action !== 0 && action !== 1)) return;
@@ -88,7 +122,11 @@ wss.on('connection', (ws) => {
     hydra.submitBlockAction({ x, y, z, blockTypeId, action });
   });
 
-  ws.on('close', () => console.log(`[relay] client disconnected (${wss.clients.size} online)`));
+  ws.on('close', () => {
+    playerPositions.delete(ws.playerId);
+    broadcast({ type: 'playerLeave', id: ws.playerId });
+    console.log(`[relay] ${ws.playerName} disconnected (${wss.clients.size} online)`);
+  });
 });
 
 // ---- dedup between live path and SnapshotConfirmed path -------------------
@@ -120,8 +158,19 @@ hydra.on('worldReplay', (actions) => {
 });
 
 hydra.on('blockDelta', (delta) => {
-  // Confirmed by a Hydra snapshot. If this relay originated it, clients were
-  // already synced on the live path — don't re-broadcast, just count it.
+  // Everyone gets the confirmation receipt (feeds the in-game activity log).
+  broadcast({
+    type: 'txConfirmed',
+    txHash: delta.txHash,
+    snapshot: delta.snapshot,
+    x: delta.x, y: delta.y, z: delta.z,
+    blockTypeId: delta.blockTypeId,
+    action: delta.action,
+    seq: delta.seq,
+  });
+
+  // If this relay originated it, clients were already synced on the live
+  // path — don't re-apply/re-broadcast the world change.
   if (consumeLocal(delta)) return;
   world.apply(delta);
   broadcast({

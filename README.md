@@ -32,9 +32,28 @@ npm start          # relay server; open http://localhost:3000 to play
 | click | capture mouse (pointer lock) |
 | WASD / mouse | move / look |
 | space / shift | jump / sprint |
-| left / right click | break / place block |
+| **double-tap space** | toggle fly mode (space up, shift down; landing exits) |
+| space (in water) | swim up — water has buoyancy, slow sink, underwater fog |
+| **hold left click** | mine block (crack stages + debris particles; hardness per material) |
+| right click (hold to repeat) | place block |
 | 1–9 or scroll | select block (grass, dirt, stone, sand, wood, leaves, glass, brick, water) |
-| **H** | **Hydra debug overlay** (head status, tx count, last snapshot, UTxO count) |
+| **M** | toggle minimap (top-down world map, player arrow, other players) |
+| **H** | **Hydra debug overlay** (head status, tx counts, last snapshot + tx hash, UTxO count, fuel) |
+
+Multiplayer: open a second tab/browser — other players appear as blocky avatars
+with name tags, live position sync at 10 Hz, and every player's confirmed
+transactions scroll through the on-chain activity feed (bottom right).
+
+### Verifying it's real (not mocked)
+
+- `GET /chain` on the relay (e.g. http://localhost:3000/chain) lists **every
+  block action with its real L2 transaction hash and raw datum CBOR**, read
+  live from the hydra-node's `GET /snapshot/utxo`.
+- `docker exec <container> hydra-node --version` — it's the upstream binary.
+- Stop the container: the game keeps running but confirmations stop and the
+  queue counter grows; start it again and the queue drains on-chain.
+- Decode any `datumCbor` yourself, e.g. `d8799f0e181b18260001181dff` →
+  `Constr 0 [14, 27, 38, 0, 1, 29]` = "break grass at (14,27,38), seq 29".
 
 ## How the Hydra integration works
 

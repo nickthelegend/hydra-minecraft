@@ -5,11 +5,15 @@
 // keeps working locally and the socket silently reconnects.
 
 export class HydraRelayClient {
-  constructor({ onWorldState, onBlockUpdate, onStats, onConnectionChange }) {
+  constructor({ onWorldState, onBlockUpdate, onStats, onConnectionChange, onTxConfirmed, onPlayers, onPlayerPos, onPlayerLeave }) {
     this.onWorldState = onWorldState;
     this.onBlockUpdate = onBlockUpdate;
     this.onStats = onStats;
     this.onConnectionChange = onConnectionChange;
+    this.onTxConfirmed = onTxConfirmed;
+    this.onPlayers = onPlayers;
+    this.onPlayerPos = onPlayerPos;
+    this.onPlayerLeave = onPlayerLeave;
     this.ws = null;
     this.connected = false;
     this.reconnectDelay = 1000;
@@ -40,6 +44,10 @@ export class HydraRelayClient {
       if (msg.type === 'worldState') this.onWorldState?.(msg.blocks);
       else if (msg.type === 'blockUpdate') this.onBlockUpdate?.(msg);
       else if (msg.type === 'hydraStats') this.onStats?.(msg);
+      else if (msg.type === 'txConfirmed') this.onTxConfirmed?.(msg);
+      else if (msg.type === 'players') this.onPlayers?.(msg.list);
+      else if (msg.type === 'playerPos') this.onPlayerPos?.(msg);
+      else if (msg.type === 'playerLeave') this.onPlayerLeave?.(msg.id);
     };
 
     this.ws.onclose = () => {
@@ -60,5 +68,10 @@ export class HydraRelayClient {
   sendBlockEvent(x, y, z, blockTypeId, action) {
     if (!this.connected || this.ws?.readyState !== WebSocket.OPEN) return; // offline: local-only
     this.ws.send(JSON.stringify({ type: 'blockEvent', x, y, z, blockTypeId, action }));
+  }
+
+  sendPos(x, y, z, yaw) {
+    if (!this.connected || this.ws?.readyState !== WebSocket.OPEN) return;
+    this.ws.send(JSON.stringify({ type: 'pos', x, y, z, yaw }));
   }
 }

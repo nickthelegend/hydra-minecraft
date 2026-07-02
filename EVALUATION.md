@@ -63,6 +63,22 @@ respawn on fall, per-instance color variation, auto-reconnect on both WS hops,
 4. **Relay verified on port 3100** — port 3000 was in use by another local app;
    default remains 3000 (`PORT` env overrides).
 
+## v2 update (same day): game-feel + verifiability upgrade
+
+Added on request ("minimap, break animations, everything you can think of"), ~1.5h autonomous:
+
+- **Minimap** (left, M toggles): full-world top-down, height-shaded, live edits, player arrow, other players as dots
+- **Break animations**: hold-to-mine with per-material hardness, 4-stage crack overlay, debris particle bursts, procedural WebAudio sounds (break/place/mine-tick/jump/splash — no asset files)
+- **Multiplayer presence**: other players render as blocky avatars with name tags, 10 Hz position sync, join/leave handling
+- **Swimming** (buoyancy, space to swim up, underwater fog + tint) and **fly mode** (double-tap space)
+- **Held-block hand** with swing animation, walk head-bob, sprint FOV kick, place pop animation, auto-repeat place
+- **On-chain activity feed** (bottom right): every SnapshotConfirmed tx scrolls by with its hash
+- **`GET /chain`**: public endpoint listing every action with real L2 tx hash + raw datum CBOR ("not mocked" proof)
+- H overlay now also shows last tx hash + remaining fuel; nights brightened
+- All verified in-browser end to end, including an unplanned real-world fallback test: an external docker cleanup deleted the hydra-node container mid-session — the game kept running, and on `docker compose up` the relay auto-reconnected and resynced (61 UTxOs, world intact from the persistent volume)
+
+v2 totals: **2,628 lines** across 19 files.
+
 ## End-to-end verification summary (all passed)
 
 1. Offline head opens; seeded UTxO visible via `GET /snapshot/utxo`.

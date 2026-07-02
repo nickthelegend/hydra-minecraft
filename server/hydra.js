@@ -45,6 +45,7 @@ export class HydraClient extends EventEmitter {
       txInvalid: 0,
       lastSnapshot: 0,
       utxoCount: 0,
+      lastTxHash: null,
     };
   }
 
@@ -137,6 +138,7 @@ export class HydraClient extends EventEmitter {
     const confirmed = snapshot.confirmed || snapshot.confirmedTransactions || [];
     for (const tx of confirmed) {
       for (const delta of this.decodeTxBlockActions(tx)) {
+        this.stats.lastTxHash = delta.txHash;
         this.emit('blockDelta', { ...delta, confirmed: true, snapshot: number });
       }
     }
@@ -149,12 +151,13 @@ export class HydraClient extends EventEmitter {
     const deltas = [];
     try {
       const parsed = CSL.Transaction.from_hex(cborHex);
+      const txHash = CSL.FixedTransaction.from_hex(cborHex).transaction_hash().to_hex();
       const outputs = parsed.body().outputs();
       for (let i = 0; i < outputs.len(); i++) {
         const pd = outputs.get(i).plutus_data();
         if (!pd) continue;
         const delta = decodeBlockActionDatumHex(pd.to_hex());
-        if (delta) deltas.push(delta);
+        if (delta) deltas.push({ ...delta, txHash });
       }
     } catch (err) {
       console.error('[hydra] failed to decode confirmed tx:', err.message);
@@ -172,11 +175,11 @@ export class HydraClient extends EventEmitter {
 
   extractBlockActions(utxoMap) {
     const actions = [];
-    for (const [, out] of Object.entries(utxoMap)) {
+    for (const [ref, out] of Object.entries(utxoMap)) {
       let decoded = null;
       if (out.inlineDatumRaw) decoded = decodeBlockActionDatumHex(out.inlineDatumRaw);
       if (!decoded && out.inlineDatum) decoded = decodeBlockActionDatumJson(out.inlineDatum);
-      if (decoded) actions.push(decoded);
+      if (decoded) actions.push({ ...decoded, txHash: ref.split('#')[0], datumCbor: out.inlineDatumRaw || null });
     }
     actions.sort((a, b) => a.seq - b.seq);
     return actions;
@@ -293,6 +296,8 @@ export class HydraClient extends EventEmitter {
   }
 
   emitStats() {
+    // kept on this.stats so the relay's statsMessage() sees it too
+    this.stats.fuelAda = this.fuel ? Number(this.fuel.lovelace / 1_000_000n) : null;
     this.emit('stats', { ...this.stats, connected: this.connected, queued: this.queue.length });
   }
 }

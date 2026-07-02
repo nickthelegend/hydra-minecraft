@@ -8,10 +8,13 @@ export class UI {
     this.selected = 0;
     this.hydraVisible = false;
     this.txSubmittedLocal = 0;
+    this.onSelect = null; // hook, set by main.js (updates held block)
     this.buildHotbar();
     this.bindInput();
     this.hydraEl = document.getElementById('hydra-overlay');
     this.debugEl = document.getElementById('debug-overlay');
+    this.feedEl = document.getElementById('chain-feed');
+    this.minimapBox = document.getElementById('minimap-box');
   }
 
   buildHotbar() {
@@ -38,6 +41,7 @@ export class UI {
   select(i) {
     this.selected = ((i % BLOCKS.length) + BLOCKS.length) % BLOCKS.length;
     this.slots.forEach((s, j) => s.classList.toggle('active', j === this.selected));
+    this.onSelect?.(this.selected);
   }
 
   bindInput() {
@@ -50,6 +54,7 @@ export class UI {
         this.hydraVisible = !this.hydraVisible;
         this.hydraEl.classList.toggle('hidden', !this.hydraVisible);
       }
+      if (e.code === 'KeyM') this.minimapBox.classList.toggle('hidden');
     });
     document.addEventListener('wheel', (e) => {
       this.select(this.selected + (e.deltaY > 0 ? 1 : -1));
@@ -78,15 +83,30 @@ export class UI {
       `last snapshot: #${s.lastSnapshot}`,
       `UTxOs in head: ${s.utxoCount}`,
       `queued: ${s.queued ?? 0}`,
+      `last tx: ${s.lastTxHash ? s.lastTxHash.slice(0, 12) + '…' : '-'}`,
+      `fuel: ${s.fuelAda != null ? s.fuelAda.toLocaleString() + ' ₳' : '-'}`,
+      `<i>full log: <u>/chain</u></i>`,
     ].join('<br>');
   }
 
-  updateDebug({ fps, position, targetBlock, online }) {
+  // on-chain activity feed (bottom right): confirmed Hydra transactions
+  pushFeed({ txHash, snapshot, x, y, z, blockTypeId, action }) {
+    const el = document.createElement('div');
+    el.className = 'feed-item';
+    const verb = action === 1 ? 'break' : 'place';
+    el.innerHTML = `⛓ <b>${verb}</b> ${BLOCKS[blockTypeId]?.name.toLowerCase() ?? '?'} (${x},${y},${z}) · tx <span>${(txHash || '').slice(0, 10)}…</span> · snap #${snapshot}`;
+    this.feedEl.prepend(el);
+    while (this.feedEl.children.length > 6) this.feedEl.lastChild.remove();
+    setTimeout(() => { el.classList.add('fade'); }, 14000);
+    setTimeout(() => { el.remove(); }, 15000);
+  }
+
+  updateDebug({ fps, position, targetBlock, online, mode, others }) {
     this.debugEl.innerHTML = [
-      `${fps.toFixed(0)} fps`,
+      `${fps.toFixed(0)} fps · ${mode}`,
       `xyz: ${position.x.toFixed(1)} / ${position.y.toFixed(1)} / ${position.z.toFixed(1)}`,
       `looking at: ${targetBlock ? `${BLOCKS[targetBlock.blockId].name} (${targetBlock.x},${targetBlock.y},${targetBlock.z})` : '-'}`,
-      `server: ${online ? 'online' : 'offline'}`,
+      `server: ${online ? 'online' : 'offline'} · players nearby: ${others}`,
     ].join('<br>');
   }
 }

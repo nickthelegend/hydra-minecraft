@@ -50,6 +50,35 @@
     #debug-overlay { top: 12px; left: 12px; }
     #hydra-overlay { top: 12px; right: 12px; color: #cfe4ff; min-width: 230px; }
     #hydra-overlay b { color: #7fb4ff; }
+    #hydra-overlay i { color: #8fa8c8; }
+
+    #minimap-box {
+      position: fixed; left: 12px; top: 108px; padding: 5px;
+      background: rgba(0, 0, 0, 0.5); border-radius: 6px; pointer-events: none;
+    }
+    #minimap-box .map-label {
+      font-family: 'Menlo', monospace; font-size: 9px; color: #bbb;
+      text-align: center; padding-top: 3px;
+    }
+    #minimap { display: block; width: 168px; height: 168px; image-rendering: pixelated; border-radius: 3px; }
+
+    #chain-feed {
+      position: fixed; right: 12px; bottom: 90px; width: 330px;
+      display: flex; flex-direction: column; gap: 4px; pointer-events: none;
+      font-family: 'Menlo', monospace; font-size: 10.5px;
+    }
+    .feed-item {
+      background: rgba(0, 20, 8, 0.62); color: #9fe8b2; padding: 5px 9px;
+      border-left: 3px solid #37c26b; border-radius: 3px;
+      transition: opacity 0.9s; overflow: hidden; white-space: nowrap;
+    }
+    .feed-item span { color: #67d08a; }
+    .feed-item.fade { opacity: 0; }
+
+    #underwater {
+      position: fixed; inset: 0; pointer-events: none;
+      background: rgba(20, 60, 160, 0.28); display: none;
+    }
 
     #overlay-hint {
       position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -69,17 +98,23 @@
 <body>
   <canvas id="game"></canvas>
 
+  <div id="underwater"></div>
   <div id="crosshair"></div>
   <div id="hotbar"></div>
   <div id="debug-overlay" class="overlay"></div>
   <div id="hydra-overlay" class="overlay hidden"></div>
+  <div id="minimap-box">
+    <canvas id="minimap"></canvas>
+    <div class="map-label">M = toggle map</div>
+  </div>
+  <div id="chain-feed"></div>
   <div id="overlay-hint">
     <div>
       <b>HYDRA MINECRAFT</b><br>
       every block you place or break becomes a Cardano Hydra L2 transaction<br><br>
       click to play &nbsp;·&nbsp; WASD move &nbsp;·&nbsp; space jump &nbsp;·&nbsp; shift sprint<br>
-      left click break &nbsp;·&nbsp; right click place &nbsp;·&nbsp; 1-9 / scroll select block<br>
-      H&nbsp;=&nbsp;hydra debug overlay
+      hold left click to mine &nbsp;·&nbsp; right click place &nbsp;·&nbsp; 1-9 / scroll select block<br>
+      double-space fly &nbsp;·&nbsp; swim with space &nbsp;·&nbsp; M minimap &nbsp;·&nbsp; H hydra overlay
     </div>
   </div>
 
