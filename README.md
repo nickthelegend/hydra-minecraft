@@ -4,6 +4,12 @@ A fully playable Minecraft-style voxel game in the browser (Three.js), where **e
 block you place or break is recorded as a real Cardano transaction on a Hydra L2
 head** — invisibly, with no wallet, no popups, and no delays.
 
+Built end to end by **Claude Fable 5** from a single prompt (then three casual
+follow-ups for survival, TNT, mobs, caves and ores). See
+[PROMPT.md](PROMPT.md) for the exact prompts and how to rebuild it yourself,
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it works, and
+[EVALUATION.md](EVALUATION.md) for the build-time/verification scoreboard.
+
 ![architecture](#architecture)
 
 ```
