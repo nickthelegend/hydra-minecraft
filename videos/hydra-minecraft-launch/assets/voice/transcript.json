@@ -1,0 +1,47 @@
+[
+  {
+    "text": "Clone",
+    "start": 0.05,
+    "end": 0.35
+  },
+  {
+    "text": "it,",
+    "start": 0.35,
+    "end": 0.63
+  },
+  {
+    "text": "run",
+    "start": 0.63,
+    "end": 0.78
+  },
+  {
+    "text": "it,",
+    "start": 1,
+    "end": 1.02
+  },
+  {
+    "text": "mine",
+    "start": 1.07,
+    "end": 1.32
+  },
+  {
+    "text": "on",
+    "start": 1.32,
+    "end": 1.47
+  },
+  {
+    "text": "chain,",
+    "start": 1.47,
+    "end": 1.98
+  },
+  {
+    "text": "Hydra",
+    "start": 2.18,
+    "end": 2.47
+  },
+  {
+    "text": "Minecraft.",
+    "start": 2.47,
+    "end": 3.37
+  }
+]

@@ -1,0 +1,205 @@
+<template data-composition-id="01-hook">
+  <style>
+    @font-face {
+      font-family: "Press Start 2P";
+      src: url("assets/fonts/press-start-2p.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "VT323";
+      src: url("assets/fonts/vt323.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+    }
+
+    /* Full-bleed dark canvas — its own clip layer on the lowest track */
+    #hook-bg {
+      position: absolute;
+      inset: 0;
+      background-color: #0B0F14;
+    }
+
+    /* ---- Type stage: everything lives in the top 83% (y <= 900) ---- */
+    .hook-stage {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 900px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hook-line {
+      font-family: "Press Start 2P", monospace;
+      color: #F2E7D5;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.15;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+
+    /* Scene 1 hero line — "WHAT IF EVERY BLOCK" */
+    #hook-line1 {
+      font-size: 92px;
+      letter-spacing: -0.01em;
+      margin-bottom: 64px;
+    }
+    #hook-line1 .grass {
+      color: #59A832;
+    }
+
+    /* Tail slot — fixed footprint that holds both swap states */
+    #hook-tail {
+      position: relative;
+      width: 1520px;
+      height: 300px;
+    }
+    #hook-tail .tail-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+    /* Scene 2 line — "YOU PLACED..." (outgoing) */
+    #hook-line2 {
+      z-index: 1;
+      font-size: 72px;
+      letter-spacing: -0.01em;
+      color: #F2E7D5;
+    }
+    /* Scene 3 line — "WAS A REAL BLOCKCHAIN TRANSACTION?" (incoming) */
+    #hook-line3 {
+      z-index: 2;
+      flex-direction: column;
+      gap: 22px;
+      opacity: 0;
+    }
+    #hook-line3 .l3-top {
+      font-size: 60px;
+      letter-spacing: -0.01em;
+      color: #F2E7D5;
+    }
+    #hook-line3 .l3-payoff {
+      font-size: 66px;
+      letter-spacing: -0.01em;
+      color: #7FB4FF;
+    }
+
+    /* ---- Voxel cube accents, lower corners, still (top <= ~810) ---- */
+    .voxel {
+      position: absolute;
+      width: 96px;
+      height: 96px;
+      border: 6px solid #F2E7D5;
+      will-change: transform;
+    }
+    .voxel::after {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 4px solid rgba(11, 15, 20, 0.45);
+    }
+    #voxel-grass {
+      left: 150px;
+      top: 700px;
+      background-color: #59A832;
+    }
+    #voxel-blue {
+      right: 150px;
+      top: 700px;
+      background-color: #7FB4FF;
+    }
+  </style>
+
+  <div id="root" data-composition-id="01-hook" data-width="1920" data-height="1080">
+    <!-- Full-bleed dark ground -->
+    <div id="hook-bg" class="clip" data-start="0" data-duration="4.245" data-track-index="0"></div>
+
+    <!-- Voxel cube accents, still in lower corners -->
+    <div id="voxel-grass" class="voxel clip" data-start="0" data-duration="4.245" data-track-index="1"></div>
+    <div id="voxel-blue" class="voxel clip" data-start="0" data-duration="4.245" data-track-index="2"></div>
+
+    <!-- Kinetic type stage -->
+    <div class="hook-stage clip" data-start="0" data-duration="4.245" data-track-index="3">
+      <div id="hook-line1" class="hook-line">WHAT IF EVERY <span class="grass">BLOCK</span></div>
+
+      <div id="hook-tail">
+        <div id="hook-line2" class="tail-state hook-line">YOU PLACED…</div>
+        <div id="hook-line3" class="tail-state hook-line">
+          <span class="l3-top">WAS A REAL</span>
+          <span class="l3-payoff">BLOCKCHAIN TRANSACTION?</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // Scene 1 (0.0–1.4s): "WHAT IF EVERY BLOCK" snaps in centered, visible by t<=0.5s.
+    tl.fromTo(
+      "#hook-line1",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.42, ease: "power3.out" },
+      0.08
+    );
+
+    // Scene 2 (1.4–2.6s): "YOU PLACED…" snaps in beneath on its spoken cue.
+    tl.fromTo(
+      "#hook-line2",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.4, ease: "power3.out" },
+      1.4
+    );
+
+    // Scene 3 (2.6–4.245s): in-place token SWAP — the signature move.
+    // Outgoing "YOU PLACED…" hard-cuts out (fast) as the payoff spring-pops
+    // in at the same anchor.
+    const SWAP = 2.6;
+    tl.to(
+      "#hook-line2",
+      { opacity: 0, duration: 0.06, ease: "power2.in" },
+      SWAP
+    );
+    tl.fromTo(
+      "#hook-line3",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.5, ease: "power3.out" },
+      SWAP
+    );
+
+    // The two voxel cubes nudge 2px on the pop, then hold dead still.
+    tl.fromTo(
+      "#voxel-grass",
+      { y: 0 },
+      { y: -2, duration: 0.12, ease: "power2.out" },
+      SWAP
+    );
+    tl.fromTo(
+      "#voxel-blue",
+      { y: 0 },
+      { y: -2, duration: 0.12, ease: "power2.out" },
+      SWAP
+    );
+
+    window.__timelines["01-hook"] = tl;
+  </script>
+</template>

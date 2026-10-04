@@ -1,0 +1,1210 @@
+{
+  "total_duration_s": 52.138,
+  "width": 1920,
+  "height": 1080,
+  "groups": [
+    {
+      "id": "caption-group-0",
+      "frame": 1,
+      "start": 0.11,
+      "end": 0.45,
+      "text": "What if",
+      "words": [
+        {
+          "id": "caption-word-0-0",
+          "text": "What",
+          "start": 0.11,
+          "end": 0.28
+        },
+        {
+          "id": "caption-word-0-1",
+          "text": "if",
+          "start": 0.33,
+          "end": 0.45
+        }
+      ]
+    },
+    {
+      "id": "caption-group-1",
+      "frame": 1,
+      "start": 0.45,
+      "end": 1.19,
+      "text": "every block",
+      "words": [
+        {
+          "id": "caption-word-1-0",
+          "text": "every",
+          "start": 0.45,
+          "end": 0.82
+        },
+        {
+          "id": "caption-word-1-1",
+          "text": "block",
+          "start": 0.82,
+          "end": 1.14
+        }
+      ]
+    },
+    {
+      "id": "caption-group-2",
+      "frame": 1,
+      "start": 1.19,
+      "end": 1.67,
+      "text": "you placed",
+      "words": [
+        {
+          "id": "caption-word-2-0",
+          "text": "you",
+          "start": 1.19,
+          "end": 1.41
+        },
+        {
+          "id": "caption-word-2-1",
+          "text": "placed",
+          "start": 1.41,
+          "end": 1.55
+        }
+      ]
+    },
+    {
+      "id": "caption-group-3",
+      "frame": 1,
+      "start": 1.95,
+      "end": 2.2,
+      "text": "was a",
+      "words": [
+        {
+          "id": "caption-word-3-0",
+          "text": "was",
+          "start": 1.95,
+          "end": 2.13
+        },
+        {
+          "id": "caption-word-3-1",
+          "text": "a",
+          "start": 2.13,
+          "end": 2.2
+        }
+      ]
+    },
+    {
+      "id": "caption-group-4",
+      "frame": 1,
+      "start": 2.2,
+      "end": 4.295,
+      "text": "real blockchain transaction?",
+      "words": [
+        {
+          "id": "caption-word-4-0",
+          "text": "real",
+          "start": 2.2,
+          "end": 2.51
+        },
+        {
+          "id": "caption-word-4-1",
+          "text": "blockchain",
+          "start": 2.51,
+          "end": 3.28
+        },
+        {
+          "id": "caption-word-4-2",
+          "text": "transaction?",
+          "start": 3.28,
+          "end": 4.24
+        }
+      ]
+    },
+    {
+      "id": "caption-group-5",
+      "frame": 2,
+      "start": 4.295,
+      "end": 4.815,
+      "text": "This is",
+      "words": [
+        {
+          "id": "caption-word-5-0",
+          "text": "This",
+          "start": 4.295,
+          "end": 4.595
+        },
+        {
+          "id": "caption-word-5-1",
+          "text": "is",
+          "start": 4.645,
+          "end": 4.815
+        }
+      ]
+    },
+    {
+      "id": "caption-group-6",
+      "frame": 2,
+      "start": 4.815,
+      "end": 6.235,
+      "text": "Hydra Minecraft,",
+      "words": [
+        {
+          "id": "caption-word-6-0",
+          "text": "Hydra",
+          "start": 4.815,
+          "end": 5.285
+        },
+        {
+          "id": "caption-word-6-1",
+          "text": "Minecraft,",
+          "start": 5.285,
+          "end": 6.225
+        }
+      ]
+    },
+    {
+      "id": "caption-group-7",
+      "frame": 2,
+      "start": 6.235,
+      "end": 7.245,
+      "text": "a voxel world",
+      "words": [
+        {
+          "id": "caption-word-7-0",
+          "text": "a",
+          "start": 6.235,
+          "end": 6.315
+        },
+        {
+          "id": "caption-word-7-1",
+          "text": "voxel",
+          "start": 6.315,
+          "end": 6.765
+        },
+        {
+          "id": "caption-word-7-2",
+          "text": "world",
+          "start": 6.765,
+          "end": 7.245
+        }
+      ]
+    },
+    {
+      "id": "caption-group-8",
+      "frame": 2,
+      "start": 7.245,
+      "end": 8.415,
+      "text": "in your browser,",
+      "words": [
+        {
+          "id": "caption-word-8-0",
+          "text": "in",
+          "start": 7.245,
+          "end": 7.415
+        },
+        {
+          "id": "caption-word-8-1",
+          "text": "your",
+          "start": 7.415,
+          "end": 7.755
+        },
+        {
+          "id": "caption-word-8-2",
+          "text": "browser,",
+          "start": 7.755,
+          "end": 8.365
+        }
+      ]
+    },
+    {
+      "id": "caption-group-9",
+      "frame": 2,
+      "start": 8.415,
+      "end": 9.715,
+      "text": "running on Cardano's",
+      "words": [
+        {
+          "id": "caption-word-9-0",
+          "text": "running",
+          "start": 8.415,
+          "end": 8.895
+        },
+        {
+          "id": "caption-word-9-1",
+          "text": "on",
+          "start": 8.895,
+          "end": 9.035
+        },
+        {
+          "id": "caption-word-9-2",
+          "text": "Cardano's",
+          "start": 9.045,
+          "end": 9.715
+        }
+      ]
+    },
+    {
+      "id": "caption-group-10",
+      "frame": 2,
+      "start": 9.715,
+      "end": 10.025,
+      "text": "Hydra",
+      "words": [
+        {
+          "id": "caption-word-10-0",
+          "text": "Hydra",
+          "start": 9.715,
+          "end": 9.905
+        }
+      ]
+    },
+    {
+      "id": "caption-group-11",
+      "frame": 2,
+      "start": 10.355,
+      "end": 10.898,
+      "text": "layer 2.",
+      "words": [
+        {
+          "id": "caption-word-11-0",
+          "text": "layer",
+          "start": 10.355,
+          "end": 10.485
+        },
+        {
+          "id": "caption-word-11-1",
+          "text": "2.",
+          "start": 10.485,
+          "end": 10.975
+        }
+      ]
+    },
+    {
+      "id": "caption-group-12",
+      "frame": 3,
+      "start": 10.898,
+      "end": 12.058,
+      "text": "No wallet,",
+      "words": [
+        {
+          "id": "caption-word-12-0",
+          "text": "No",
+          "start": 10.898,
+          "end": 11.108
+        },
+        {
+          "id": "caption-word-12-1",
+          "text": "wallet,",
+          "start": 11.108,
+          "end": 12.058
+        }
+      ]
+    },
+    {
+      "id": "caption-group-13",
+      "frame": 3,
+      "start": 12.058,
+      "end": 13.208,
+      "text": "no pop-ups,",
+      "words": [
+        {
+          "id": "caption-word-13-0",
+          "text": "no",
+          "start": 12.058,
+          "end": 12.238
+        },
+        {
+          "id": "caption-word-13-1",
+          "text": "pop-ups,",
+          "start": 12.238,
+          "end": 13.178
+        }
+      ]
+    },
+    {
+      "id": "caption-group-14",
+      "frame": 3,
+      "start": 13.208,
+      "end": 14.498,
+      "text": "no fees.",
+      "words": [
+        {
+          "id": "caption-word-14-0",
+          "text": "no",
+          "start": 13.208,
+          "end": 13.598
+        },
+        {
+          "id": "caption-word-14-1",
+          "text": "fees.",
+          "start": 13.598,
+          "end": 14.458
+        }
+      ]
+    },
+    {
+      "id": "caption-group-15",
+      "frame": 3,
+      "start": 14.498,
+      "end": 15.228,
+      "text": "A relay signs",
+      "words": [
+        {
+          "id": "caption-word-15-0",
+          "text": "A",
+          "start": 14.498,
+          "end": 14.538
+        },
+        {
+          "id": "caption-word-15-1",
+          "text": "relay",
+          "start": 14.538,
+          "end": 14.928
+        },
+        {
+          "id": "caption-word-15-2",
+          "text": "signs",
+          "start": 14.928,
+          "end": 15.108
+        }
+      ]
+    },
+    {
+      "id": "caption-group-16",
+      "frame": 3,
+      "start": 15.518,
+      "end": 16.278,
+      "text": "every action",
+      "words": [
+        {
+          "id": "caption-word-16-0",
+          "text": "every",
+          "start": 15.518,
+          "end": 15.708
+        },
+        {
+          "id": "caption-word-16-1",
+          "text": "action",
+          "start": 15.708,
+          "end": 16.168
+        }
+      ]
+    },
+    {
+      "id": "caption-group-17",
+      "frame": 3,
+      "start": 16.278,
+      "end": 16.798,
+      "text": "into an",
+      "words": [
+        {
+          "id": "caption-word-17-0",
+          "text": "into",
+          "start": 16.278,
+          "end": 16.408
+        },
+        {
+          "id": "caption-word-17-1",
+          "text": "an",
+          "start": 16.408,
+          "end": 16.798
+        }
+      ]
+    },
+    {
+      "id": "caption-group-18",
+      "frame": 3,
+      "start": 16.798,
+      "end": 17.738,
+      "text": "offline Hydra head",
+      "words": [
+        {
+          "id": "caption-word-18-0",
+          "text": "offline",
+          "start": 16.798,
+          "end": 17.088
+        },
+        {
+          "id": "caption-word-18-1",
+          "text": "Hydra",
+          "start": 17.148,
+          "end": 17.528
+        },
+        {
+          "id": "caption-word-18-2",
+          "text": "head",
+          "start": 17.528,
+          "end": 17.618
+        }
+      ]
+    },
+    {
+      "id": "caption-group-19",
+      "frame": 3,
+      "start": 18.088,
+      "end": 18.718,
+      "text": "invisibly.",
+      "words": [
+        {
+          "id": "caption-word-19-0",
+          "text": "invisibly.",
+          "start": 18.088,
+          "end": 18.598
+        }
+      ]
+    },
+    {
+      "id": "caption-group-20",
+      "frame": 4,
+      "start": 18.767,
+      "end": 19.427,
+      "text": "Press H,",
+      "words": [
+        {
+          "id": "caption-word-20-0",
+          "text": "Press",
+          "start": 18.767,
+          "end": 19.137
+        },
+        {
+          "id": "caption-word-20-1",
+          "text": "H,",
+          "start": 19.157,
+          "end": 19.307
+        }
+      ]
+    },
+    {
+      "id": "caption-group-21",
+      "frame": 4,
+      "start": 19.627,
+      "end": 20.627,
+      "text": "head status,",
+      "words": [
+        {
+          "id": "caption-word-21-0",
+          "text": "head",
+          "start": 19.627,
+          "end": 19.807
+        },
+        {
+          "id": "caption-word-21-1",
+          "text": "status,",
+          "start": 19.807,
+          "end": 20.587
+        }
+      ]
+    },
+    {
+      "id": "caption-group-22",
+      "frame": 4,
+      "start": 20.627,
+      "end": 21.467,
+      "text": "snapshots,",
+      "words": [
+        {
+          "id": "caption-word-22-0",
+          "text": "snapshots,",
+          "start": 20.627,
+          "end": 21.347
+        }
+      ]
+    },
+    {
+      "id": "caption-group-23",
+      "frame": 4,
+      "start": 21.497,
+      "end": 21.987,
+      "text": "fuel,",
+      "words": [
+        {
+          "id": "caption-word-23-0",
+          "text": "fuel,",
+          "start": 21.497,
+          "end": 21.907
+        }
+      ]
+    },
+    {
+      "id": "caption-group-24",
+      "frame": 4,
+      "start": 21.987,
+      "end": 22.457,
+      "text": "and every",
+      "words": [
+        {
+          "id": "caption-word-24-0",
+          "text": "and",
+          "start": 21.987,
+          "end": 22.087
+        },
+        {
+          "id": "caption-word-24-1",
+          "text": "every",
+          "start": 22.087,
+          "end": 22.357
+        }
+      ]
+    },
+    {
+      "id": "caption-group-25",
+      "frame": 4,
+      "start": 22.457,
+      "end": 23.667,
+      "text": "confirmed transaction",
+      "words": [
+        {
+          "id": "caption-word-25-0",
+          "text": "confirmed",
+          "start": 22.457,
+          "end": 22.947
+        },
+        {
+          "id": "caption-word-25-1",
+          "text": "transaction",
+          "start": 22.947,
+          "end": 23.547
+        }
+      ]
+    },
+    {
+      "id": "caption-group-26",
+      "frame": 4,
+      "start": 23.847,
+      "end": 25.007,
+      "text": "scrolling by,",
+      "words": [
+        {
+          "id": "caption-word-26-0",
+          "text": "scrolling",
+          "start": 23.847,
+          "end": 24.187
+        },
+        {
+          "id": "caption-word-26-1",
+          "text": "by,",
+          "start": 24.187,
+          "end": 25.007
+        }
+      ]
+    },
+    {
+      "id": "caption-group-27",
+      "frame": 4,
+      "start": 25.007,
+      "end": 26.073,
+      "text": "hash by hash.",
+      "words": [
+        {
+          "id": "caption-word-27-0",
+          "text": "hash",
+          "start": 25.007,
+          "end": 25.337
+        },
+        {
+          "id": "caption-word-27-1",
+          "text": "by",
+          "start": 25.337,
+          "end": 25.497
+        },
+        {
+          "id": "caption-word-27-2",
+          "text": "hash.",
+          "start": 25.497,
+          "end": 26.097
+        }
+      ]
+    },
+    {
+      "id": "caption-group-28",
+      "frame": 5,
+      "start": 26.073,
+      "end": 27.483,
+      "text": "Hold to mine.",
+      "words": [
+        {
+          "id": "caption-word-28-0",
+          "text": "Hold",
+          "start": 26.073,
+          "end": 26.503
+        },
+        {
+          "id": "caption-word-28-1",
+          "text": "to",
+          "start": 26.503,
+          "end": 26.683
+        },
+        {
+          "id": "caption-word-28-2",
+          "text": "mine.",
+          "start": 26.753,
+          "end": 27.483
+        }
+      ]
+    },
+    {
+      "id": "caption-group-29",
+      "frame": 5,
+      "start": 27.483,
+      "end": 28.693,
+      "text": "Real block hardness,",
+      "words": [
+        {
+          "id": "caption-word-29-0",
+          "text": "Real",
+          "start": 27.483,
+          "end": 27.723
+        },
+        {
+          "id": "caption-word-29-1",
+          "text": "block",
+          "start": 27.723,
+          "end": 27.983
+        },
+        {
+          "id": "caption-word-29-2",
+          "text": "hardness,",
+          "start": 28.043,
+          "end": 28.573
+        }
+      ]
+    },
+    {
+      "id": "caption-group-30",
+      "frame": 5,
+      "start": 28.733,
+      "end": 29.783,
+      "text": "crack by crack,",
+      "words": [
+        {
+          "id": "caption-word-30-0",
+          "text": "crack",
+          "start": 28.733,
+          "end": 29.023
+        },
+        {
+          "id": "caption-word-30-1",
+          "text": "by",
+          "start": 29.023,
+          "end": 29.153
+        },
+        {
+          "id": "caption-word-30-2",
+          "text": "crack,",
+          "start": 29.203,
+          "end": 29.743
+        }
+      ]
+    },
+    {
+      "id": "caption-group-31",
+      "frame": 5,
+      "start": 29.783,
+      "end": 31.013,
+      "text": "diamonds take three",
+      "words": [
+        {
+          "id": "caption-word-31-0",
+          "text": "diamonds",
+          "start": 29.783,
+          "end": 30.303
+        },
+        {
+          "id": "caption-word-31-1",
+          "text": "take",
+          "start": 30.303,
+          "end": 30.543
+        },
+        {
+          "id": "caption-word-31-2",
+          "text": "three",
+          "start": 30.673,
+          "end": 30.913
+        }
+      ]
+    },
+    {
+      "id": "caption-group-32",
+      "frame": 5,
+      "start": 31.013,
+      "end": 31.816,
+      "text": "full seconds.",
+      "words": [
+        {
+          "id": "caption-word-32-0",
+          "text": "full",
+          "start": 31.013,
+          "end": 31.183
+        },
+        {
+          "id": "caption-word-32-1",
+          "text": "seconds.",
+          "start": 31.183,
+          "end": 31.703
+        }
+      ]
+    },
+    {
+      "id": "caption-group-33",
+      "frame": 6,
+      "start": 31.816,
+      "end": 33.816,
+      "text": "TNT chain reactions,",
+      "words": [
+        {
+          "id": "caption-word-33-0",
+          "text": "TNT",
+          "start": 31.816,
+          "end": 32.096
+        },
+        {
+          "id": "caption-word-33-1",
+          "text": "chain",
+          "start": 32.146,
+          "end": 32.666
+        },
+        {
+          "id": "caption-word-33-2",
+          "text": "reactions,",
+          "start": 32.666,
+          "end": 33.816
+        }
+      ]
+    },
+    {
+      "id": "caption-group-34",
+      "frame": 6,
+      "start": 33.816,
+      "end": 35.416,
+      "text": "37 transactions,",
+      "words": [
+        {
+          "id": "caption-word-34-0",
+          "text": "37",
+          "start": 33.816,
+          "end": 34.266
+        },
+        {
+          "id": "caption-word-34-1",
+          "text": "transactions,",
+          "start": 34.276,
+          "end": 35.386
+        }
+      ]
+    },
+    {
+      "id": "caption-group-35",
+      "frame": 6,
+      "start": 35.416,
+      "end": 36.406,
+      "text": "one blast,",
+      "words": [
+        {
+          "id": "caption-word-35-0",
+          "text": "one",
+          "start": 35.416,
+          "end": 35.676
+        },
+        {
+          "id": "caption-word-35-1",
+          "text": "blast,",
+          "start": 35.676,
+          "end": 36.386
+        }
+      ]
+    },
+    {
+      "id": "caption-group-36",
+      "frame": 6,
+      "start": 36.406,
+      "end": 37.666,
+      "text": "zero invalid.",
+      "words": [
+        {
+          "id": "caption-word-36-0",
+          "text": "zero",
+          "start": 36.406,
+          "end": 36.906
+        },
+        {
+          "id": "caption-word-36-1",
+          "text": "invalid.",
+          "start": 36.906,
+          "end": 37.546
+        }
+      ]
+    },
+    {
+      "id": "caption-group-37",
+      "frame": 7,
+      "start": 37.741,
+      "end": 38.381,
+      "text": "Caves,",
+      "words": [
+        {
+          "id": "caption-word-37-0",
+          "text": "Caves,",
+          "start": 37.741,
+          "end": 38.261
+        }
+      ]
+    },
+    {
+      "id": "caption-group-38",
+      "frame": 7,
+      "start": 38.431,
+      "end": 39.661,
+      "text": "zombies after",
+      "words": [
+        {
+          "id": "caption-word-38-0",
+          "text": "zombies",
+          "start": 38.431,
+          "end": 39.081
+        },
+        {
+          "id": "caption-word-38-1",
+          "text": "after",
+          "start": 39.171,
+          "end": 39.541
+        }
+      ]
+    },
+    {
+      "id": "caption-group-39",
+      "frame": 7,
+      "start": 40.181,
+      "end": 40.311,
+      "text": "dark,",
+      "words": [
+        {
+          "id": "caption-word-39-0",
+          "text": "dark,",
+          "start": 40.181,
+          "end": 40.311
+        }
+      ]
+    },
+    {
+      "id": "caption-group-40",
+      "frame": 7,
+      "start": 40.311,
+      "end": 40.881,
+      "text": "friends in",
+      "words": [
+        {
+          "id": "caption-word-40-0",
+          "text": "friends",
+          "start": 40.311,
+          "end": 40.761
+        },
+        {
+          "id": "caption-word-40-1",
+          "text": "in",
+          "start": 40.761,
+          "end": 40.881
+        }
+      ]
+    },
+    {
+      "id": "caption-group-41",
+      "frame": 7,
+      "start": 40.881,
+      "end": 41.321,
+      "text": "the same",
+      "words": [
+        {
+          "id": "caption-word-41-0",
+          "text": "the",
+          "start": 40.881,
+          "end": 41.071
+        },
+        {
+          "id": "caption-word-41-1",
+          "text": "same",
+          "start": 41.071,
+          "end": 41.321
+        }
+      ]
+    },
+    {
+      "id": "caption-group-42",
+      "frame": 7,
+      "start": 41.321,
+      "end": 41.791,
+      "text": "world on",
+      "words": [
+        {
+          "id": "caption-word-42-0",
+          "text": "world",
+          "start": 41.321,
+          "end": 41.631
+        },
+        {
+          "id": "caption-word-42-1",
+          "text": "on",
+          "start": 41.701,
+          "end": 41.791
+        }
+      ]
+    },
+    {
+      "id": "caption-group-43",
+      "frame": 7,
+      "start": 41.791,
+      "end": 42.221,
+      "text": "a ledger",
+      "words": [
+        {
+          "id": "caption-word-43-0",
+          "text": "a",
+          "start": 41.791,
+          "end": 41.851
+        },
+        {
+          "id": "caption-word-43-1",
+          "text": "ledger",
+          "start": 41.851,
+          "end": 42.221
+        }
+      ]
+    },
+    {
+      "id": "caption-group-44",
+      "frame": 7,
+      "start": 42.221,
+      "end": 43.591,
+      "text": "that never forgets.",
+      "words": [
+        {
+          "id": "caption-word-44-0",
+          "text": "that",
+          "start": 42.221,
+          "end": 42.461
+        },
+        {
+          "id": "caption-word-44-1",
+          "text": "never",
+          "start": 42.461,
+          "end": 42.791
+        },
+        {
+          "id": "caption-word-44-2",
+          "text": "forgets.",
+          "start": 42.791,
+          "end": 43.471
+        }
+      ]
+    },
+    {
+      "id": "caption-group-45",
+      "frame": 8,
+      "start": 43.599,
+      "end": 45.679,
+      "text": "built end-to-end by Claude",
+      "words": [
+        {
+          "id": "caption-word-45-0",
+          "text": "built",
+          "start": 43.599,
+          "end": 43.969
+        },
+        {
+          "id": "caption-word-45-1",
+          "text": "end-to-end",
+          "start": 43.969,
+          "end": 44.869
+        },
+        {
+          "id": "caption-word-45-2",
+          "text": "by",
+          "start": 44.869,
+          "end": 45.049
+        },
+        {
+          "id": "caption-word-45-3",
+          "text": "Claude",
+          "start": 45.049,
+          "end": 45.569
+        }
+      ]
+    },
+    {
+      "id": "caption-group-46",
+      "frame": 8,
+      "start": 45.679,
+      "end": 46.819,
+      "text": "Fable Vfrom one",
+      "words": [
+        {
+          "id": "caption-word-46-0",
+          "text": "Fable",
+          "start": 45.679,
+          "end": 45.999
+        },
+        {
+          "id": "caption-word-46-1",
+          "text": "Vfrom",
+          "start": 46.029,
+          "end": 46.539
+        },
+        {
+          "id": "caption-word-46-2",
+          "text": "one",
+          "start": 46.539,
+          "end": 46.819
+        }
+      ]
+    },
+    {
+      "id": "caption-group-47",
+      "frame": 8,
+      "start": 46.819,
+      "end": 47.179,
+      "text": "prompt",
+      "words": [
+        {
+          "id": "caption-word-47-0",
+          "text": "prompt",
+          "start": 46.819,
+          "end": 47.059
+        }
+      ]
+    },
+    {
+      "id": "caption-group-48",
+      "frame": 8,
+      "start": 47.449,
+      "end": 47.909,
+      "text": "while its",
+      "words": [
+        {
+          "id": "caption-word-48-0",
+          "text": "while",
+          "start": 47.449,
+          "end": 47.719
+        },
+        {
+          "id": "caption-word-48-1",
+          "text": "its",
+          "start": 47.719,
+          "end": 47.909
+        }
+      ]
+    },
+    {
+      "id": "caption-group-49",
+      "frame": 8,
+      "start": 47.909,
+      "end": 48.817,
+      "text": "author slept.",
+      "words": [
+        {
+          "id": "caption-word-49-0",
+          "text": "author",
+          "start": 47.909,
+          "end": 48.289
+        },
+        {
+          "id": "caption-word-49-1",
+          "text": "slept.",
+          "start": 48.299,
+          "end": 48.699
+        }
+      ]
+    },
+    {
+      "id": "caption-group-50",
+      "frame": 9,
+      "start": 48.817,
+      "end": 49.397,
+      "text": "Clone it,",
+      "words": [
+        {
+          "id": "caption-word-50-0",
+          "text": "Clone",
+          "start": 48.817,
+          "end": 49.117
+        },
+        {
+          "id": "caption-word-50-1",
+          "text": "it,",
+          "start": 49.117,
+          "end": 49.397
+        }
+      ]
+    },
+    {
+      "id": "caption-group-51",
+      "frame": 9,
+      "start": 49.397,
+      "end": 49.667,
+      "text": "run",
+      "words": [
+        {
+          "id": "caption-word-51-0",
+          "text": "run",
+          "start": 49.397,
+          "end": 49.547
+        }
+      ]
+    },
+    {
+      "id": "caption-group-52",
+      "frame": 9,
+      "start": 49.767,
+      "end": 49.837,
+      "text": "it,",
+      "words": [
+        {
+          "id": "caption-word-52-0",
+          "text": "it,",
+          "start": 49.767,
+          "end": 49.787
+        }
+      ]
+    },
+    {
+      "id": "caption-group-53",
+      "frame": 9,
+      "start": 49.837,
+      "end": 50.867,
+      "text": "mine on chain,",
+      "words": [
+        {
+          "id": "caption-word-53-0",
+          "text": "mine",
+          "start": 49.837,
+          "end": 50.087
+        },
+        {
+          "id": "caption-word-53-1",
+          "text": "on",
+          "start": 50.087,
+          "end": 50.237
+        },
+        {
+          "id": "caption-word-53-2",
+          "text": "chain,",
+          "start": 50.237,
+          "end": 50.747
+        }
+      ]
+    },
+    {
+      "id": "caption-group-54",
+      "frame": 9,
+      "start": 50.947,
+      "end": 52.257,
+      "text": "Hydra Minecraft.",
+      "words": [
+        {
+          "id": "caption-word-54-0",
+          "text": "Hydra",
+          "start": 50.947,
+          "end": 51.237
+        },
+        {
+          "id": "caption-word-54-1",
+          "text": "Minecraft.",
+          "start": 51.237,
+          "end": 52.137
+        }
+      ]
+    }
+  ]
+}

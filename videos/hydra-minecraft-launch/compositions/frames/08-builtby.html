@@ -1,0 +1,208 @@
+<template data-composition-id="08-builtby">
+  <style>
+    @font-face {
+      font-family: "Press Start 2P";
+      src: url("assets/fonts/press-start-2p.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "VT323";
+      src: url("assets/fonts/vt323.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+    }
+
+    /* ---- Full-bleed dark ground on its own lowest-track clip (NOT #root) ---- */
+    #bb-bg {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      background-color: #0B0F14;
+    }
+
+    /* ---- Centered vertical stack in the upper/mid band; all content y <= 900 ---- */
+    #bb-stack {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 250px;              /* content lives ~250 -> ~700, well above 900 keep-out */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Scene 1 — kicker (VT323, ink-2), small, upper */
+    #bb-kicker {
+      font-family: "VT323", monospace;
+      color: #D9CD8E;
+      text-transform: uppercase;
+      font-size: 34px;
+      letter-spacing: 0.14em;
+      line-height: 1.0;
+      will-change: transform, opacity;
+      transform-origin: 50% 50%;
+    }
+
+    /* Scene 1 — "CLAUDE FABLE 5" slam (Press Start 2P, green, hard offset shadow) */
+    #bb-headline {
+      margin-top: 40px;
+      font-family: "Press Start 2P", monospace;
+      color: #59A832;
+      text-transform: uppercase;
+      font-size: 88px;
+      line-height: 0.9;
+      letter-spacing: -0.01em;
+      /* hard solid offset shadow, no blur */
+      text-shadow: 8px 8px 0 #05080B;
+      will-change: transform, opacity;
+      transform-origin: 50% 50%;
+    }
+
+    /* Scene 2 — "ONE PROMPT" accent block: bordered GREEN fill, ink text, hard shadow */
+    #bb-block {
+      margin-top: 68px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 52px;
+      background-color: #59A832;
+      border: 6px solid #F2E7D5;
+      /* hard offset shadow (orange + ink), no blur */
+      box-shadow: 8px 8px 0 #D94534, 8px 8px 0 6px #05080B;
+      font-family: "Press Start 2P", monospace;
+      color: #0B0F14;
+      text-transform: uppercase;
+      font-size: 40px;
+      line-height: 1.0;
+      letter-spacing: -0.01em;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+
+    /* Scene 3 — stat sub-line types in (VT323 mono, ink-2). Monospace so the caret sits flush. */
+    #bb-subline {
+      margin-top: 58px;
+      font-family: "VT323", monospace;
+      color: #D9CD8E;
+      text-transform: uppercase;
+      font-size: 30px;
+      letter-spacing: 0.10em;
+      line-height: 1.0;
+      white-space: nowrap;
+      will-change: opacity;
+    }
+    /* blinking type-in caret, driven by timeline progress (opacity keyed, not CSS anim) */
+    #bb-caret {
+      display: inline-block;
+      width: 16px;
+      color: #59A832;
+      margin-left: 2px;
+    }
+  </style>
+
+  <div id="root" data-composition-id="08-builtby" data-width="1920" data-height="1080">
+    <!-- Full-bleed dark ground on lowest content track -->
+    <div
+      id="bb-bg"
+      class="clip"
+      data-start="0"
+      data-duration="5.248"
+      data-track-index="0"
+    ></div>
+
+    <!-- Centered type stack -->
+    <div
+      id="bb-stack"
+      class="clip"
+      data-start="0"
+      data-duration="5.248"
+      data-track-index="1"
+    >
+      <div id="bb-kicker">Built end to end by</div>
+      <div id="bb-headline">Claude Fable 5</div>
+      <div id="bb-block">One Prompt</div>
+      <div id="bb-subline"><span id="bb-subtext"></span><span id="bb-caret">_</span></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // Elements start collapsed; entrances use fromTo so t=0 is correct under seek.
+    gsap.set("#bb-headline", { opacity: 0 });
+    gsap.set("#bb-block", { opacity: 0 });
+    gsap.set("#bb-subline", { opacity: 0 });
+
+    // ---- Scene 1 (0.0–2.2s) — "Built end to end by Claude Fable 5" ----
+    // Kicker SNAPS in small, upper-center (snap-in form: quick attack, expo.out).
+    tl.fromTo(
+      "#bb-kicker",
+      { y: -28, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.34, ease: "expo.out" },
+      0.15
+    );
+
+    // "CLAUDE FABLE 5" SLAMS beneath it (kinetic-beat-slam: hard slam, scale + settle).
+    tl.fromTo(
+      "#bb-headline",
+      { scale: 1.35, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.5, ease: "power4.out" },
+      0.6
+    );
+
+    // ---- Scene 2 (2.2–3.6s) — "from one prompt" ----
+    // The bordered GREEN "ONE PROMPT" block POPS center (spring-pop, smooth power3 settle).
+    tl.fromTo(
+      "#bb-block",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.5, ease: "power3.out" },
+      2.25
+    );
+
+    // ---- Scene 3 (3.6–5.248s) — "while its author slept" ----
+    // Sub-line container fades on, then the text TYPES in deterministically:
+    // a proxy {n} tween GSAP interpolates from progress (seek-safe, no JS timer/clock).
+    const FULL = "18 MINUTES · 12/12 FEATURES · 0 HUMANS AWAKE";
+    const subEl = document.getElementById("bb-subtext");
+    const typer = { n: 0 };
+
+    tl.to("#bb-subline", { opacity: 1, duration: 0.2, ease: "none" }, 3.62);
+
+    tl.to(
+      typer,
+      {
+        n: FULL.length,
+        duration: 1.1,
+        ease: "none",
+        onUpdate: () => {
+          const count = Math.round(typer.n);
+          subEl.textContent = FULL.slice(0, count);
+        },
+      },
+      3.7
+    );
+
+    // Deterministic caret blink driven by timeline progress (finite yoyo, no CSS anim).
+    // 4 blink cycles across the hold; floor-guarded so it never overshoots data-duration.
+    tl.to(
+      "#bb-caret",
+      { opacity: 0.15, duration: 0.28, ease: "none", yoyo: true, repeat: 5 },
+      3.7
+    );
+
+    window.__timelines["08-builtby"] = tl;
+  </script>
+</template>

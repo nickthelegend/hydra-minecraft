@@ -1,0 +1,284 @@
+<template data-composition-id="07-world">
+  <style>
+    @font-face {
+      font-family: "Press Start 2P";
+      src: url("assets/fonts/press-start-2p.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "VT323";
+      src: url("assets/fonts/vt323.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+    }
+
+    /* Full-bleed dark canvas — its own clip layer on the lowest track */
+    #world-bg {
+      position: absolute;
+      inset: 0;
+      background-color: #0B0F14;
+    }
+
+    /* ---- Triptych cards ---------------------------------------------------
+       Three bordered gameplay cards. Side cards ~30% each, center slightly
+       larger/forward. All anchored high so labels + card stay y <= 900. */
+    .world-card {
+      position: absolute;
+      border: 8px solid #F2E7D5;
+      background-color: #0B0F14;
+      box-shadow: 20px 20px 0 0 rgba(11, 15, 20, 0.9),
+        20px 20px 0 8px #F2E7D5;
+      overflow: hidden;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+    .world-card img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      /* Muted screenshots — dim slightly so labels read; the world is the star */
+      filter: saturate(0.82) brightness(0.86);
+    }
+
+    /* Left — CAVES & ORES */
+    #card-cave {
+      left: 96px;
+      top: 250px;
+      width: 520px;
+      height: 480px;
+    }
+    /* Center — SURVIVAL NIGHTS · slightly larger + forward */
+    #card-night {
+      left: 660px;
+      top: 190px;
+      width: 600px;
+      height: 560px;
+      z-index: 3;
+      border-color: #D9CD8E;
+      box-shadow: 24px 24px 0 0 rgba(11, 15, 20, 0.9),
+        24px 24px 0 8px #D9CD8E;
+    }
+    /* Right — MULTIPLAYER */
+    #card-multi {
+      left: 1304px;
+      top: 250px;
+      width: 520px;
+      height: 480px;
+    }
+
+    /* ---- Card labels — VT323 chips pinned to each card's top ---- */
+    .card-label {
+      position: absolute;
+      font-family: "VT323", monospace;
+      font-size: 34px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #0B0F14;
+      background-color: #F2E7D5;
+      border: 4px solid #F2E7D5;
+      padding: 4px 16px 2px;
+      line-height: 1.1;
+      white-space: nowrap;
+      will-change: transform, opacity;
+      transform-origin: 0% 50%;
+    }
+    #label-cave {
+      left: 96px;
+      top: 200px;
+      background-color: #F2E7D5;
+      color: #0B0F14;
+    }
+    /* SURVIVAL NIGHTS — orange */
+    #label-night {
+      left: 660px;
+      top: 140px;
+      background-color: #D94534;
+      border-color: #D94534;
+      color: #F2E7D5;
+      z-index: 4;
+    }
+    /* MULTIPLAYER — hydra blue */
+    #label-multi {
+      left: 1304px;
+      top: 200px;
+      background-color: #7FB4FF;
+      border-color: #7FB4FF;
+      color: #0B0F14;
+    }
+
+    /* ---- Scene 4 — full-width ledger underline (hydra blue) ---- */
+    #ledger-underline {
+      position: absolute;
+      left: 96px;
+      top: 792px;
+      width: 1728px;
+      height: 10px;
+      background-color: #7FB4FF;
+      transform-origin: 0% 50%;
+      will-change: transform;
+    }
+
+    /* ---- Scene 4 — typed caption, centered below the underline ---- */
+    #ledger-caption {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 826px;
+      text-align: center;
+      font-family: "VT323", monospace;
+      font-size: 44px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #F2E7D5;
+      line-height: 1.2;
+      white-space: nowrap;
+      will-change: opacity;
+    }
+    #ledger-caption .cap-cursor {
+      display: inline-block;
+      color: #7FB4FF;
+    }
+  </style>
+
+  <div id="root" data-composition-id="07-world" data-width="1920" data-height="1080">
+    <!-- Full-bleed dark ground -->
+    <div id="world-bg" class="clip" data-start="0" data-duration="5.888" data-track-index="0"></div>
+
+    <!-- Scene 1 — LEFT card: caves -->
+    <div id="card-cave" class="world-card clip" data-start="0" data-duration="5.888" data-track-index="1">
+      <img src="assets/game-cave.png" alt="" />
+    </div>
+    <div id="label-cave" class="card-label clip" data-start="0" data-duration="5.888" data-track-index="2">CAVES &amp; ORES</div>
+
+    <!-- Scene 2 — CENTER card: survival nights (larger/forward) -->
+    <div id="card-night" class="world-card clip" data-start="0" data-duration="5.888" data-track-index="3">
+      <img src="assets/game-night.png" alt="" />
+    </div>
+    <div id="label-night" class="card-label clip" data-start="0" data-duration="5.888" data-track-index="4">SURVIVAL NIGHTS</div>
+
+    <!-- Scene 3 — RIGHT card: multiplayer -->
+    <div id="card-multi" class="world-card clip" data-start="0" data-duration="5.888" data-track-index="5">
+      <img src="assets/game-multi.png" alt="" />
+    </div>
+    <div id="label-multi" class="card-label clip" data-start="0" data-duration="5.888" data-track-index="6">MULTIPLAYER</div>
+
+    <!-- Scene 4 — ledger underline + typed caption -->
+    <div id="ledger-underline" class="clip" data-start="0" data-duration="5.888" data-track-index="7"></div>
+    <div id="ledger-caption" class="clip" data-start="0" data-duration="5.888" data-track-index="8"><span class="cap-text"></span><span class="cap-cursor">_</span></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // ---- SIGNATURE MOVE: grid-card-assemble ----
+    // Three bordered gameplay cards self-assemble into a triptych, ONE PER
+    // NAMED BEAT (not all at once), then hold. Each card spring-pops in place
+    // (scale 0 -> resting, power3.out — smooth, no bounce) on its VO cue,
+    // paired with its label chip snapping from the left.
+
+    // Scene 1 (0.0–1.2s) — "Caves." LEFT card snaps into the left third.
+    tl.fromTo(
+      "#card-cave",
+      { scale: 0, opacity: 0, y: 28 },
+      { scale: 1, opacity: 1, y: 0, duration: 0.46, ease: "power3.out" },
+      0.08
+    );
+    tl.fromTo(
+      "#label-cave",
+      { scaleX: 0, opacity: 0 },
+      { scaleX: 1, opacity: 1, duration: 0.32, ease: "power3.out" },
+      0.28
+    );
+
+    // Scene 2 (1.2–2.4s) — "Zombies after dark." CENTER card snaps in,
+    // slightly larger / forward.
+    tl.fromTo(
+      "#card-night",
+      { scale: 0, opacity: 0, y: 28 },
+      { scale: 1, opacity: 1, y: 0, duration: 0.48, ease: "power3.out" },
+      1.2
+    );
+    tl.fromTo(
+      "#label-night",
+      { scaleX: 0, opacity: 0 },
+      { scaleX: 1, opacity: 1, duration: 0.32, ease: "power3.out" },
+      1.4
+    );
+
+    // Scene 3 (2.4–3.8s) — "Friends in the same world." RIGHT card snaps in.
+    // Triptych complete, holds.
+    tl.fromTo(
+      "#card-multi",
+      { scale: 0, opacity: 0, y: 28 },
+      { scale: 1, opacity: 1, y: 0, duration: 0.46, ease: "power3.out" },
+      2.4
+    );
+    tl.fromTo(
+      "#label-multi",
+      { scaleX: 0, opacity: 0 },
+      { scaleX: 1, opacity: 1, duration: 0.32, ease: "power3.out" },
+      2.6
+    );
+
+    // Scene 4 (3.8–5.888s) — "a ledger that never forgets."
+    // Full-width BLUE underline sweeps beneath all three (scaleX 0 -> 1,
+    // origin left), then the caption "EVERY EDIT ON-CHAIN" types in centered.
+    tl.fromTo(
+      "#ledger-underline",
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.6, ease: "power2.inOut" },
+      3.8
+    );
+
+    // Typed caption — deterministic smooth character slice (no CSS anim).
+    const CAPTION = "EVERY EDIT ON-CHAIN";
+    const capEl = document.querySelector("#ledger-caption .cap-text");
+    const curEl = document.querySelector("#ledger-caption .cap-cursor");
+    const typeStart = 4.35;
+    const typeDur = 1.05;
+    const len = { v: 0 };
+    tl.fromTo(
+      len,
+      { v: 0 },
+      {
+        v: CAPTION.length,
+        duration: typeDur,
+        ease: "none",
+        onUpdate: () => {
+          capEl.textContent = CAPTION.substring(0, Math.floor(len.v));
+        },
+      },
+      typeStart
+    );
+
+    // Deterministic cursor blink (sin-driven), running across the caption beat.
+    const blink = { p: 0 };
+    tl.fromTo(
+      blink,
+      { p: 0 },
+      {
+        p: Math.PI * 2 * 3, // ~3 blink cycles over the hold
+        duration: 2.088,
+        ease: "none",
+        onUpdate: () => {
+          curEl.style.opacity = Math.sin(blink.p) > 0 ? "1" : "0";
+        },
+      },
+      3.8
+    );
+
+    window.__timelines["07-world"] = tl;
+  </script>
+</template>

@@ -1,0 +1,444 @@
+<template data-composition-id="04-proof">
+  <style>
+    @font-face {
+      font-family: "Press Start 2P";
+      src: url("assets/fonts/press-start-2p.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "VT323";
+      src: url("assets/fonts/vt323.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      background-color: #0B0F14;
+    }
+
+    /* ---- Full-bleed hero: the real gameplay + HUD screenshot ---- */
+    #proof-shot {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      object-fit: cover;
+      will-change: opacity;
+    }
+
+    /* Very slight dim ONLY over the empty-sky region where callout text sits.
+       Never covers the HUD (top-right overlay / bottom-right feed). */
+    #sky-dim {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1180px;
+      height: 620px;
+      background: linear-gradient(
+        180deg,
+        rgba(11, 15, 20, 0.15) 0%,
+        rgba(11, 15, 20, 0.06) 60%,
+        rgba(11, 15, 20, 0) 100%
+      );
+      will-change: opacity;
+    }
+
+    /* ---- Scene 1: the [H] keycap block (upper sky, not bottom band) ---- */
+    #keycap {
+      position: absolute;
+      left: 610px;
+      top: 300px;
+      width: 236px;
+      height: 236px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #59A832;
+      border: 8px solid #F2E7D5;
+      box-shadow: 14px 14px 0 0 #0B0F14;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+    #keycap .cap {
+      font-family: "Press Start 2P", monospace;
+      font-size: 62px;
+      line-height: 1;
+      color: #0B0F14;
+      text-transform: uppercase;
+    }
+    #keycap .cap-hint {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 16px;
+      text-align: center;
+      font-family: "VT323", monospace;
+      font-size: 26px;
+      letter-spacing: 0.08em;
+      color: rgba(11, 15, 20, 0.75);
+      text-transform: uppercase;
+    }
+
+    /* ---- Callout brackets (SVG stroke draw-on) ---- */
+    .bracket-svg {
+      position: absolute;
+      overflow: visible;
+      will-change: opacity;
+    }
+    .bracket-svg path {
+      fill: none;
+      stroke: #7FB4FF;
+      stroke-width: 6;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+    }
+
+    /* Bracket around the TOP-RIGHT HYDRA L2 overlay */
+    #bracket-top {
+      left: 1628px;
+      top: 8px;
+      width: 288px;
+      height: 244px;
+    }
+    /* Bracket around the BOTTOM-RIGHT tx feed */
+    #bracket-feed {
+      left: 1552px;
+      top: 838px;
+      width: 366px;
+      height: 176px;
+    }
+
+    /* ---- VT323 tags for Scene 2 (STATUS / SNAPSHOTS / FUEL) ---- */
+    .tag {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      background-color: #0B0F14;
+      border: 4px solid #7FB4FF;
+      padding: 8px 16px;
+      transform-origin: 100% 50%;
+      will-change: transform, opacity;
+    }
+    .tag .tag-txt {
+      font-family: "VT323", monospace;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      color: #7FB4FF;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    /* leader arrow pointing INWARD (to the right, toward the overlay) */
+    .tag .tag-arrow {
+      margin-left: 12px;
+      width: 0;
+      height: 0;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      border-left: 14px solid #7FB4FF;
+    }
+    #tag-status {
+      right: 316px;
+      top: 30px;
+    }
+    #tag-snapshots {
+      right: 316px;
+      top: 104px;
+    }
+    #tag-fuel {
+      right: 316px;
+      top: 178px;
+    }
+
+    /* ---- Scene 3 feed label (kept ABOVE y<=900) ---- */
+    #feed-label {
+      position: absolute;
+      left: 1146px;
+      top: 822px;
+      display: flex;
+      align-items: center;
+      background-color: #0B0F14;
+      border: 4px solid #7FB4FF;
+      padding: 10px 18px;
+      transform-origin: 0% 50%;
+      will-change: transform, opacity;
+    }
+    #feed-label .fl-txt {
+      font-family: "VT323", monospace;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      color: #F2E7D5;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    /* leader arrow pointing INWARD (to the right, toward the feed) */
+    #feed-label .fl-arrow {
+      margin-left: 14px;
+      width: 0;
+      height: 0;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      border-left: 14px solid #7FB4FF;
+    }
+
+    /* ---- Green underline that sweeps the feed once ---- */
+    #feed-underline {
+      position: absolute;
+      left: 1568px;
+      top: 998px;
+      width: 336px;
+      height: 6px;
+      background-color: #59A832;
+      transform-origin: 0% 50%;
+      will-change: transform;
+    }
+  </style>
+
+  <div id="root" data-composition-id="04-proof" data-width="1920" data-height="1080">
+    <!-- Full-bleed hero screenshot on the lowest content track -->
+    <img
+      id="proof-shot"
+      class="clip"
+      src="assets/game-overlay.png"
+      alt=""
+      data-start="0"
+      data-duration="7.296"
+      data-track-index="0"
+    />
+
+    <!-- Subtle sky-only dim under the callout copy -->
+    <div
+      id="sky-dim"
+      class="clip"
+      data-start="0"
+      data-duration="7.296"
+      data-track-index="1"
+    ></div>
+
+    <!-- Scene 1: [H] keycap, upper sky -->
+    <div
+      id="keycap"
+      class="clip"
+      data-start="0"
+      data-duration="7.296"
+      data-track-index="2"
+    >
+      <span class="cap">[H]</span>
+      <span class="cap-hint">PRESS</span>
+    </div>
+
+    <!-- Scene 2: bracket around the top-right HYDRA L2 overlay -->
+    <svg
+      id="bracket-top"
+      class="bracket-svg clip"
+      viewBox="0 0 288 244"
+      xmlns="http://www.w3.org/2000/svg"
+      data-start="1.4"
+      data-duration="5.896"
+      data-track-index="3"
+    >
+      <!-- pinning bracket: opens toward the overlay (right); left corners drawn -->
+      <path
+        id="bt-path"
+        d="M 288 3 L 3 3 L 3 241 L 288 241"
+      />
+    </svg>
+
+    <!-- Scene 2 tags -->
+    <div
+      id="tag-status"
+      class="tag clip"
+      data-start="1.55"
+      data-duration="5.746"
+      data-track-index="4"
+    >
+      <span class="tag-txt">STATUS</span>
+      <span class="tag-arrow"></span>
+    </div>
+    <div
+      id="tag-snapshots"
+      class="tag clip"
+      data-start="1.85"
+      data-duration="5.446"
+      data-track-index="5"
+    >
+      <span class="tag-txt">SNAPSHOTS</span>
+      <span class="tag-arrow"></span>
+    </div>
+    <div
+      id="tag-fuel"
+      class="tag clip"
+      data-start="2.15"
+      data-duration="5.146"
+      data-track-index="6"
+    >
+      <span class="tag-txt">FUEL</span>
+      <span class="tag-arrow"></span>
+    </div>
+
+    <!-- Scene 3: bracket around the bottom-right tx feed -->
+    <svg
+      id="bracket-feed"
+      class="bracket-svg clip"
+      viewBox="0 0 366 176"
+      xmlns="http://www.w3.org/2000/svg"
+      data-start="4.2"
+      data-duration="3.096"
+      data-track-index="7"
+    >
+      <!-- pinning bracket: opens toward the feed (right); left corners drawn -->
+      <path
+        id="bf-path"
+        d="M 366 3 L 3 3 L 3 173 L 366 173"
+      />
+    </svg>
+
+    <!-- Scene 3 feed label (top<=838, well above 900) -->
+    <div
+      id="feed-label"
+      class="clip"
+      data-start="4.35"
+      data-duration="2.946"
+      data-track-index="8"
+    >
+      <span class="fl-txt">ON-CHAIN, HASH BY HASH</span>
+      <span class="fl-arrow"></span>
+    </div>
+
+    <!-- Scene 3 green underline sweep across the feed -->
+    <div
+      id="feed-underline"
+      class="clip"
+      data-start="4.6"
+      data-duration="2.696"
+      data-track-index="9"
+    ></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    /* =========================================================
+       Scene 1 (0.0–1.4s): overlay crossfades in full-bleed and
+       HOLDS (the screenshot itself never moves after this).
+       On "Press H," the green [H] keycap POPS in the upper sky.
+       ========================================================= */
+
+    // crossfade-in: opacity 0 -> 1 (the still hero is up by t<=0.5s)
+    tl.fromTo(
+      "#proof-shot",
+      { opacity: 0 },
+      { opacity: 1, duration: 0.5, ease: "power1.out" },
+      0
+    );
+    // sky-dim rides in with the shot, only over the empty sky
+    tl.fromTo(
+      "#sky-dim",
+      { opacity: 0 },
+      { opacity: 1, duration: 0.5, ease: "power1.out" },
+      0
+    );
+
+    // pop: [H] keycap springs in on the "Press H" cue (smooth power3 settle)
+    tl.fromTo(
+      "#keycap",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.46, ease: "power3.out" },
+      0.7
+    );
+
+    /* =========================================================
+       Scene 2 (1.4–4.2s): on "head status, snapshots, fuel," a
+       blue bracket DRAWS around the top-right overlay, then three
+       VT323 tags SNAP in one per word, pointing inward.
+       ========================================================= */
+
+    // bracket draw-on (svg-path-draw): measure length, animate dashoffset -> 0
+    const btPath = document.getElementById("bt-path");
+    const btLen = btPath.getTotalLength();
+    btPath.style.strokeDasharray = btLen;
+    btPath.style.strokeDashoffset = btLen;
+    tl.fromTo(
+      "#bracket-top",
+      { opacity: 0 },
+      { opacity: 1, duration: 0.01, ease: "none" },
+      1.4
+    );
+    tl.to(
+      "#bt-path",
+      { strokeDashoffset: 0, duration: 0.7, ease: "power2.out" },
+      1.4
+    );
+
+    // snap-in tags, one per spoken word (STATUS / SNAPSHOTS / FUEL)
+    tl.fromTo(
+      "#tag-status",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.36, ease: "power3.out" },
+      1.55
+    );
+    tl.fromTo(
+      "#tag-snapshots",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.36, ease: "power3.out" },
+      1.85
+    );
+    tl.fromTo(
+      "#tag-fuel",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.36, ease: "power3.out" },
+      2.15
+    );
+
+    /* =========================================================
+       Scene 3 (4.2–7.296s): on "every confirmed transaction
+       scrolling by," a second blue bracket DRAWS around the
+       bottom-right feed, its label SNAPS in (kept above y=900),
+       and a green underline SWEEPS the feed once. Then dead still.
+       ========================================================= */
+
+    // second bracket draw-on
+    const bfPath = document.getElementById("bf-path");
+    const bfLen = bfPath.getTotalLength();
+    bfPath.style.strokeDasharray = bfLen;
+    bfPath.style.strokeDashoffset = bfLen;
+    tl.fromTo(
+      "#bracket-feed",
+      { opacity: 0 },
+      { opacity: 1, duration: 0.01, ease: "none" },
+      4.2
+    );
+    tl.to(
+      "#bf-path",
+      { strokeDashoffset: 0, duration: 0.7, ease: "power2.out" },
+      4.2
+    );
+
+    // feed label snaps in (pointing inward toward the feed)
+    tl.fromTo(
+      "#feed-label",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.4, ease: "power3.out" },
+      4.35
+    );
+
+    // underline-sweep: scaleX 0 -> 1 once, left to right, then holds
+    tl.fromTo(
+      "#feed-underline",
+      { scaleX: 0, opacity: 1 },
+      { scaleX: 1, duration: 0.7, ease: "power2.out" },
+      4.9
+    );
+
+    window.__timelines["04-proof"] = tl;
+  </script>
+</template>

@@ -1,0 +1,304 @@
+<template data-composition-id="09-cta">
+  <style>
+    @font-face {
+      font-family: "Press Start 2P";
+      src: url("assets/fonts/press-start-2p.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "VT323";
+      src: url("assets/fonts/vt323.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+    }
+
+    /* Full-bleed dark night ground — own clip layer on the lowest track */
+    #cta-bg {
+      position: absolute;
+      inset: 0;
+      background-color: #0B0F14;
+    }
+
+    /* ---- Stage: everything in the top 83% (y <= 900) ---- */
+    .cta-stage {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 900px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Row holding the built cube mark + the shifting content column */
+    .cta-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 68px;
+    }
+
+    /* ---- 3x3 voxel cube mark (assembles block-by-block) ---- */
+    #cta-cube {
+      position: relative;
+      width: 306px;
+      height: 306px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    .vox {
+      position: relative;
+      border: 5px solid #F2E7D5;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+    .vox::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 3px solid rgba(11, 15, 20, 0.42);
+    }
+    .vox.grass { background-color: #59A832; }
+    .vox.blue  { background-color: #7FB4FF; }
+    .vox.red   { background-color: #D94534; }
+
+    /* ---- Content column to the right of the cube ---- */
+    .cta-content {
+      position: relative;
+      width: 940px;
+      height: 306px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Scene 1: three imperative chips, stamped left->right */
+    #cta-chips {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 24px;
+    }
+    .chip {
+      font-family: "Press Start 2P", monospace;
+      font-size: 30px;
+      line-height: 1;
+      text-transform: uppercase;
+      color: #F2E7D5;
+      background-color: #0B0F14;
+      border: 5px solid #F2E7D5;
+      padding: 22px 26px;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+    .chip.red {
+      color: #D94534;
+      border-color: #D94534;
+    }
+
+    /* Scene 2: HYDRA MINECRAFT lockup (hard offset shadow) */
+    #cta-lockup {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 22px;
+      opacity: 0;
+    }
+    .lockup-line {
+      font-family: "Press Start 2P", monospace;
+      font-size: 88px;
+      line-height: 0.9;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: #F2E7D5;
+      text-shadow: 8px 8px 0 rgba(11, 15, 20, 1), 12px 12px 0 #59A832;
+      transform-origin: 0% 50%;
+      will-change: transform, opacity;
+    }
+
+    /* Scene 3: URL types in beneath (VT323, hydra blue) */
+    #cta-url {
+      position: relative;
+      margin-top: 58px;
+      font-family: "VT323", monospace;
+      font-size: 44px;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      color: #7FB4FF;
+      text-transform: none;
+      white-space: nowrap;
+      opacity: 0;
+    }
+    #cta-url .prompt { color: #59A832; }
+    #cta-url-cursor {
+      display: inline-block;
+      color: #7FB4FF;
+    }
+    .cur-off { opacity: 0; }
+  </style>
+
+  <div id="root" data-composition-id="09-cta" data-width="1920" data-height="1080">
+    <!-- Full-bleed dark ground -->
+    <div id="cta-bg" class="clip" data-start="0" data-duration="3.371" data-track-index="0"></div>
+
+    <!-- Stage -->
+    <div class="cta-stage clip" data-start="0" data-duration="3.371" data-track-index="1">
+      <div class="cta-row">
+        <!-- 3x3 voxel cube mark -->
+        <div id="cta-cube">
+          <div class="vox grass" id="vox0"></div>
+          <div class="vox blue"  id="vox1"></div>
+          <div class="vox red"   id="vox2"></div>
+          <div class="vox blue"  id="vox3"></div>
+          <div class="vox red"   id="vox4"></div>
+          <div class="vox grass" id="vox5"></div>
+          <div class="vox red"   id="vox6"></div>
+          <div class="vox grass" id="vox7"></div>
+          <div class="vox blue"  id="vox8"></div>
+        </div>
+
+        <!-- Content column: chips -> lockup -->
+        <div class="cta-content">
+          <div id="cta-chips">
+            <div class="chip" id="chip0">CLONE</div>
+            <div class="chip" id="chip1">RUN</div>
+            <div class="chip red" id="chip2">MINE ON-CHAIN</div>
+          </div>
+
+          <div id="cta-lockup">
+            <div class="lockup-line" id="lock-hydra">HYDRA</div>
+            <div class="lockup-line" id="lock-mine">MINECRAFT</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- URL types in beneath the row -->
+      <div id="cta-url"><span class="prompt">$&nbsp;</span><span id="cta-url-text"></span><span id="cta-url-cursor">_</span></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // ===== Scene 1 (0.0-1.4s): cube assembles block-by-block + chips stamp =====
+
+    // 3x3 cube: 9 blocks pop in on a deterministic index-derived stagger,
+    // reading as blocks being placed one at a time. Whole cube lands well
+    // inside one beat (9 * 0.055 ~= 0.5s), first block visible by t<=0.5s.
+    for (let i = 0; i < 9; i++) {
+      tl.fromTo(
+        "#vox" + i,
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.34, ease: "power3.out" },
+        0.05 + i * 0.055
+      );
+    }
+
+    // Three chips STAMP left->right on their spoken cues ("Clone it. Run it.
+    // Mine on-chain."): a hard, slightly-over-scale slam that settles.
+    const CHIP_AT = [0.28, 0.66, 1.04];
+    for (let i = 0; i < 3; i++) {
+      tl.fromTo(
+        "#chip" + i,
+        { scale: 1.6, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.24, ease: "power4.out" },
+        CHIP_AT[i]
+      );
+    }
+
+    // ===== Scene 2 (1.4-2.4s): chips clear, HYDRA MINECRAFT locks up =====
+
+    // Chips clear as a text-to-text swap (fast fade out, in place).
+    tl.to(
+      "#cta-chips",
+      { opacity: 0, duration: 0.16, ease: "power2.in" },
+      1.42
+    );
+
+    // Lockup container becomes active, then each line slides+pops into place
+    // beside the finished cube.
+    tl.set("#cta-lockup", { opacity: 1 }, 1.58);
+    tl.fromTo(
+      "#lock-hydra",
+      { x: -46, scale: 0.6, opacity: 0 },
+      { x: 0, scale: 1, opacity: 1, duration: 0.42, ease: "power3.out" },
+      1.6
+    );
+    tl.fromTo(
+      "#lock-mine",
+      { x: -46, scale: 0.6, opacity: 0 },
+      { x: 0, scale: 1, opacity: 1, duration: 0.42, ease: "power3.out" },
+      1.78
+    );
+
+    // ===== Scene 3 (2.4-3.371s): URL types in beneath (deterministic) =====
+
+    const URL_TEXT = "github.com/nickthelegend/hydra-minecraft";
+    const urlEl = document.getElementById("cta-url-text");
+    const cursorEl = document.getElementById("cta-url-cursor");
+    const URL_START = 2.42;
+    const CPS = 46; // energetic, tech feel
+    const TYPE_DUR = URL_TEXT.length / CPS; // ~0.89s -> ends ~3.31s
+
+    // Reveal the URL row (prompt + cursor) just before typing.
+    tl.to("#cta-url", { opacity: 1, duration: 0.12, ease: "power1.out" }, URL_START - 0.1);
+
+    // Deterministic type-in: one tl.call per character, driven by the timeline
+    // (never a JS timer). Each seek reproduces the same substring.
+    for (let c = 1; c <= URL_TEXT.length; c++) {
+      tl.call(
+        (n) => { urlEl.textContent = URL_TEXT.slice(0, n); },
+        [c],
+        URL_START + (c / CPS)
+      );
+    }
+    // Guarantee full text is present before/at t=0-seek-to-end.
+    tl.call(() => { urlEl.textContent = URL_TEXT; }, [], URL_START + TYPE_DUR + 0.02);
+
+    // Cursor: solid while typing, then a deterministic settle blink (finite).
+    // classList toggles via tl.call so each seek reproduces the caret state.
+    tl.call(() => { cursorEl.className = ""; }, [], URL_START); // solid caret during typing
+    const blinkStart = URL_START + TYPE_DUR + 0.06;
+    const blinkEnd = 3.371;
+    let bt = blinkStart, bi = 0;
+    while (bt < blinkEnd) {
+      const off = (bi % 2 === 0);
+      tl.call((o) => { cursorEl.className = o ? "cur-off" : ""; }, [off], bt);
+      bt += 0.4;
+      bi++;
+    }
+
+    // ===== Gentle settle to end (final frame) =====
+    // The whole row eases down by a hair as the lockup lands — a quiet settle,
+    // not an exit. Finite, deterministic.
+    tl.fromTo(
+      ".cta-row",
+      { y: 0 },
+      { y: 6, duration: 0.6, ease: "sine.out" },
+      1.6
+    );
+
+    window.__timelines["09-cta"] = tl;
+  </script>
+</template>

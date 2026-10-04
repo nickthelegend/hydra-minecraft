@@ -1,0 +1,31 @@
+[em] Grass
+[em] Dirt
+[em] Stone
+[em] Sand
+[em] Wood
+[em] Leaves
+[em] Glass
+[em] Brick
+[em] Water
+[em] TNT
+[em] Coal Ore
+[em] Iron Ore
+[em] Gold Ore
+[em] Diamond Ore
+[h1] You died
+[div] click to respawn — your world (and every block you broke on the way down)
+[div] is safe on the Hydra L2 ledger
+[div] 28 fps · walking · creative [G]
+[div] xyz: 10.5 / 36.0 / 10.5
+[div] looking at: -
+[div] server: online · players: 1 · mobs: 0
+[b] HYDRA L2 [H]
+[i] full log:
+[u] /chain
+[div] M = toggle map
+[b] HYDRA MINECRAFT
+[div] every block you place or break becomes a Cardano Hydra L2 transaction
+[div] click to play  ·  WASD + mouse  ·  space jump  ·  shift sneak  ·  double-W sprint
+[div] hold left click to mine  ·  right click place  ·  middle click pick  ·  1-9,0 select
+[div] punch TNT to ignite  ·  double-space fly  ·  G survival mode  ·  F5 third person
+[div] T chat  ·  M minimap  ·  H hydra overlay

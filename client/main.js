@@ -508,7 +508,8 @@ function updateDayNight(dt, elapsed) {
   const phase = ((elapsed / DAY_LENGTH_S) + 0.12) % 1;
   const angle = phase * Math.PI * 2;
   sun.position.set(Math.cos(angle) * 100, Math.sin(angle) * 100, 40);
-  const daylight = Math.max(0, Math.sin(angle)) ** 0.7;
+  let daylight = Math.max(0, Math.sin(angle)) ** 0.7;
+  if (window.__poseDaylight != null) daylight = window.__poseDaylight; // demo poses
   lastDaylight = daylight;
   sun.intensity = 0.25 + daylight * 0.95;
   ambient.intensity = 0.4 + daylight * 0.32;
@@ -690,6 +691,85 @@ function step(dt, now = performance.now()) {
   renderer.render(scene, camera);
 }
 requestAnimationFrame(animate);
+
+// ---- demo poses (?pose=vista|overlay|mine|tnt|cave|night|multi) ---------------
+// Deterministic staged scenes for screenshots and marketing captures.
+
+function applyPose(name) {
+  const hint = document.getElementById('overlay-hint');
+  hint?.classList.add('hidden');
+  const pose = (x, y, z, yaw, pitch) => {
+    player.position.set(x, y, z);
+    player.velocity.set(0, 0, 0);
+    player.yaw = yaw;
+    player.pitch = pitch;
+  };
+  const surf = (x, z) => world.surfaceHeight(x, z);
+
+  switch (name) {
+    case 'vista': {
+      pose(10.5, surf(10, 10) + 1.01, 10.5, 4.71, -0.2);
+      break;
+    }
+    case 'overlay': {
+      pose(10.5, surf(10, 10) + 1.01, 10.5, 4.71, -0.16);
+      if (!ui.hydraVisible) document.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyH' }));
+      ui.pushFeed({ txHash: 'a3f40b12c9d8e7f6a1b2', snapshot: 112, x: 7, y: 27, z: 5, blockTypeId: 7, action: 0 });
+      ui.pushFeed({ txHash: 'c86d805c52796426aa10', snapshot: 113, x: -8, y: 22, z: -9, blockTypeId: 13, action: 1 });
+      break;
+    }
+    case 'mine': {
+      const y = surf(4, 12);
+      applyEdit(4, y + 1, 10, 13); // diamond ore in view
+      pose(4.5, y + 1.01, 13.5, 0, -0.32);
+      crack.show(4, y + 1, 10, 0.62);
+      handSwing = 0.5;
+      break;
+    }
+    case 'tnt': {
+      const y = surf(6, 20);
+      applyEdit(6, y + 1, 16, 9);
+      applyEdit(8, y + 1, 17, 9);
+      pose(6.5, y + 1.01, 21.5, 0, -0.18);
+      ui.select(TNT);
+      particles.burst(7, y + 3, 15, TNT, 26);
+      particles.burst(7, y + 2, 15, 2, 18);
+      break;
+    }
+    case 'cave': {
+      pose(-49.5, 10.01, -19.5, 2.36, -0.05);
+      applyEdit(-52, 10, -22, 13); // diamonds glinting in the wall
+      applyEdit(-52, 9, -21, 11);
+      lamp.intensity = 1.6;
+      break;
+    }
+    case 'night': {
+      window.__poseDaylight = 0.04;
+      const y = surf(-6, 24);
+      mobs.isHost = false;
+      const z1 = mobs.ensure(9001, 'zombie', -5.5, surf(-6, 21) + 1, 21.5, Math.PI);
+      z1.target = { x: -5.5, y: surf(-6, 21) + 1, z: 21.5, yaw: Math.PI };
+      const z2 = mobs.ensure(9002, 'zombie', -8.5, surf(-9, 20) + 1, 20.5, Math.PI * 0.85);
+      z2.target = { x: -8.5, y: surf(-9, 20) + 1, z: 20.5, yaw: Math.PI * 0.85 };
+      pose(-5.5, y + 1.01, 24.5, 0, -0.08); // yaw 0 looks toward -z, at the zombies
+      break;
+    }
+    case 'multi': {
+      const y = surf(-2, 16);
+      remotePlayers.upsert({ id: 501, name: 'steve-2', x: -4.5, y: surf(-5, 13) + 1, z: 13.5, yaw: 2.4 });
+      remotePlayers.upsert({ id: 502, name: 'steve-3', x: 1.5, y: surf(1, 11) + 1, z: 11.5, yaw: 3.4 });
+      pose(-1.5, y + 1.01, 16.5, 0.25, -0.08);
+      break;
+    }
+  }
+}
+
+const poseName = new URLSearchParams(location.search).get('pose');
+if (poseName) {
+  // apply after boot + world-state arrival so edits land on final terrain
+  setTimeout(() => applyPose(poseName), 900);
+  setTimeout(() => applyPose(poseName), 2200); // re-assert over any late updates
+}
 
 // debug/console handle (also used by automated tests; step() lets tests pump
 // frames deterministically when the tab is backgrounded and RAF is paused)

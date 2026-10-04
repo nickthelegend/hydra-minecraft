@@ -1,0 +1,30 @@
+{
+  "typography": [
+    {
+      "role": "label",
+      "fontFamily": "Menlo",
+      "fontSize": "9px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#BBBBBB",
+      "sampleText": "M = toggle map"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      3,
+      5,
+      6
+    ],
+    "baseUnit": 8
+  },
+  "radius": [],
+  "shadows": [],
+  "buttons": [],
+  "cards": [],
+  "nav": null,
+  "chips": [],
+  "statCells": [],
+  "tabs": []
+}

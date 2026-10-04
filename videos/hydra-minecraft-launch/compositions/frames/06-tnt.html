@@ -1,0 +1,261 @@
+<template data-composition-id="06-tnt">
+  <style>
+    @font-face {
+      font-family: "Press Start 2P";
+      src: url("assets/fonts/press-start-2p.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "VT323";
+      src: url("assets/fonts/vt323.woff2") format("woff2");
+      font-weight: 400;
+      font-display: block;
+    }
+
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+    }
+
+    /* ---- Full-bleed canvas ground on a clip layer (lowest track), never #root ---- */
+    #tnt-bg {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      background-color: #0B0F14;
+    }
+
+    /* ---- HERO ASSET: the real TNT screenshot. Enters full-bleed, then SLIDES
+           left->right to settle at right ~45%, vacating the left. ---- */
+    #tnt-shot {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      object-fit: cover;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+
+    /* ---- Left column that the screenshot vacates: giant "37" + label + chips ---- */
+    .tnt-left {
+      position: absolute;
+      left: 96px;
+      top: 168px;
+      width: 900px; /* comfortably inside the vacated left ~55% */
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    /* Giant TNT-red count-up number — Press Start 2P, hard offset shadow (no blur) */
+    #tnt-number-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    #tnt-number {
+      display: block;
+      font-family: "Press Start 2P", monospace;
+      color: #D94534; /* TNT red */
+      font-size: 224px;
+      line-height: 0.9;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      /* hard solid offset shadow block, NO blur */
+      text-shadow:
+        12px 12px 0 #05080B,
+        12px 12px 0 1px #05080B;
+      will-change: transform, opacity;
+      transform-origin: 0% 50%;
+    }
+
+    /* TRANSACTIONS mono label snaps beneath in ink */
+    #tnt-txlabel {
+      margin-top: 26px;
+      font-family: "VT323", monospace;
+      color: #F2E7D5; /* ink */
+      text-transform: uppercase;
+      font-size: 52px;
+      letter-spacing: 0.14em;
+      line-height: 1.0;
+      text-shadow: 4px 4px 0 #05080B;
+      will-change: transform, opacity;
+      transform-origin: 0% 50%;
+    }
+
+    /* Two stacked bordered chips beneath */
+    .tnt-chip {
+      margin-top: 30px;
+      display: inline-flex;
+      align-items: center;
+      padding: 18px 30px;
+      background-color: #0B0F14;
+      border: 5px solid #F2E7D5;
+      box-shadow: 8px 8px 0 #05080B;
+      font-family: "VT323", monospace;
+      text-transform: uppercase;
+      font-size: 40px;
+      letter-spacing: 0.12em;
+      line-height: 1.0;
+      transform-origin: 0% 50%;
+      will-change: transform, opacity;
+    }
+    #tnt-chip-blast {
+      color: #F2E7D5; /* ink */
+      border-color: #F2E7D5;
+    }
+    #tnt-chip-invalid {
+      color: #59A832; /* green */
+      border-color: #59A832;
+    }
+
+    /* Tiny TNT-red voxel debris flecks that pop on the "37" and settle */
+    .tnt-fleck {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background-color: #D94534;
+      border: 3px solid #05080B;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+  </style>
+
+  <div id="root" data-composition-id="06-tnt" data-width="1920" data-height="1080">
+    <!-- Full-bleed canvas ground, lowest content track -->
+    <div
+      id="tnt-bg"
+      class="clip"
+      data-start="0"
+      data-duration="5.845"
+      data-track-index="0"
+    ></div>
+
+    <!-- HERO: TNT screenshot, full-bleed, direct child of root. Slides to right ~45%. -->
+    <img
+      id="tnt-shot"
+      class="clip"
+      src="assets/game-tnt.png"
+      alt=""
+      data-start="0"
+      data-duration="5.845"
+      data-track-index="1"
+    />
+
+    <!-- Left column vacated by the slide: giant 37 + label + chips + debris.
+         Decorative voxel-debris flecks are absolutely positioned around the
+         number and intentionally extend past the text box. -->
+    <div class="tnt-left clip" data-layout-allow-overflow data-start="0" data-duration="5.845" data-track-index="2">
+      <div id="tnt-number-wrap" data-layout-allow-overflow>
+        <span id="tnt-number">0</span>
+        <!-- voxel debris flecks anchored around the number (decorative) -->
+        <span class="tnt-fleck" id="fleck-1" style="left: -34px; top: 40px;"></span>
+        <span class="tnt-fleck" id="fleck-2" style="left: 210px; top: -18px;"></span>
+        <span class="tnt-fleck" id="fleck-3" style="left: 236px; top: 150px;"></span>
+        <span class="tnt-fleck" id="fleck-4" style="left: 120px; top: 240px;"></span>
+        <span class="tnt-fleck" id="fleck-5" style="left: -20px; top: 210px;"></span>
+      </div>
+      <div id="tnt-txlabel">TRANSACTIONS</div>
+      <div class="tnt-chip" id="tnt-chip-blast">ONE BLAST</div>
+      <div class="tnt-chip" id="tnt-chip-invalid">0 INVALID</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // Hide the left-column pieces until their cue (fromTo states the start, so
+    // seeking to t=0 lands them correctly — no CSS-hidden reliance).
+
+    // ---- Scene 1 (0.0-1.3s): TNT screenshot CUTS IN full-bleed, then SLIDES ----
+    // aside (signature move: it slides, never cuts) to settle at right ~45%,
+    // scaling down and translating right, vacating the LEFT for the stat.
+    // Landing: scale 0.62 (~1190px wide) pushed right so its left edge sits ~52%.
+    tl.fromTo(
+      "#tnt-shot",
+      { x: 0, scale: 1, opacity: 1 },
+      { x: 490, scale: 0.62, duration: 0.9, ease: "power3.inOut" },
+      0.42
+    );
+
+    // ---- Scene 2 (1.3-3.0s): giant TNT-red "37" COUNTS UP 0 -> 37 in the ----
+    // vacated left. Count driven off the timeline via a gsap tween on a proxy
+    // object + onUpdate writing textContent (seek-safe, deterministic — NOT a
+    // JS timer). The number also pops in (scale) as it begins counting.
+    const numEl = document.getElementById("tnt-number");
+    const counter = { v: 0 };
+    tl.fromTo(
+      "#tnt-number",
+      { scale: 0.4, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.5, ease: "power3.out" },
+      1.32
+    );
+    tl.to(
+      counter,
+      {
+        v: 37,
+        duration: 1.15,
+        ease: "power3.out",
+        onUpdate: () => {
+          numEl.textContent = Math.round(counter.v);
+        }
+      },
+      1.36
+    );
+
+    // "TRANSACTIONS" mono label snaps beneath in ink, once the number is up.
+    tl.fromTo(
+      "#tnt-txlabel",
+      { x: -40, opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.4, ease: "expo.out" },
+      2.45
+    );
+
+    // ---- Scene 3 (3.0-5.845s): "One blast. Zero invalid" — two stacked chips ----
+    // POP beneath, one per cue (spring-pop, smooth power3 settle, no overshoot).
+    tl.fromTo(
+      "#tnt-chip-blast",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.42, ease: "power3.out" },
+      3.05
+    );
+    tl.fromTo(
+      "#tnt-chip-invalid",
+      { scale: 0, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.42, ease: "power3.out" },
+      3.95
+    );
+
+    // Tiny TNT-red voxel debris flecks pop on the "37" and settle. Deterministic
+    // per-index offsets (no Math.random); each pops then holds still.
+    const fleckStarts = [3.10, 3.20, 3.16, 3.28, 3.24];
+    const fleckDx = [-26, 24, 20, -18, -22];
+    const fleckDy = [-22, -18, 22, 24, 18];
+    gsap.utils.toArray(".tnt-fleck").forEach((el, i) => {
+      tl.fromTo(
+        el,
+        { scale: 0, opacity: 0, x: 0, y: 0 },
+        {
+          scale: 1,
+          opacity: 1,
+          x: fleckDx[i],
+          y: fleckDy[i],
+          duration: 0.44,
+          ease: "power3.out"
+        },
+        fleckStarts[i]
+      );
+    });
+
+    // Hold still to end — no exit (not the final frame).
+
+    window.__timelines["06-tnt"] = tl;
+  </script>
+</template>
